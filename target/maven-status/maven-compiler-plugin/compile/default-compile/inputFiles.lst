@@ -1,5 +1,9 @@
-/home/ubuntu/spring-redis-app/src/main/java/com/poc/HomeController.java
-/home/ubuntu/spring-redis-app/src/main/java/com/poc/HelloController.java
-/home/ubuntu/spring-redis-app/src/main/java/com/poc/Application.java
-/home/ubuntu/spring-redis-app/src/main/java/com/poc/SessionConfig.java
-/home/ubuntu/spring-redis-app/src/main/java/com/poc/SessionController.java
+/tmp/spring-redis-poc/src/main/java/com/poc/controller/SessionApiController.java
+/tmp/spring-redis-poc/src/main/java/com/poc/model/ArchitectureStatus.java
+/tmp/spring-redis-poc/src/main/java/com/poc/controller/TestController.java
+/tmp/spring-redis-poc/src/main/java/com/poc/service/ArchitectureTestService.java
+/tmp/spring-redis-poc/src/main/java/com/poc/model/ComponentStatus.java
+/tmp/spring-redis-poc/src/main/java/com/poc/controller/DashboardController.java
+/tmp/spring-redis-poc/src/main/java/com/poc/model/SessionInfo.java
+/tmp/spring-redis-poc/src/main/java/com/poc/config/RedisConfig.java
+/tmp/spring-redis-poc/src/main/java/com/poc/Application.java
