@@ -1,7 +1,7 @@
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk-alpine AS build
 
-# Install curl for health checks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Install Maven
+RUN apk add --no-cache maven
 
 # Create app directory
 WORKDIR /app
@@ -10,25 +10,23 @@ WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 
-# Install Maven
-RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
-
 # Build application
 RUN mvn clean package -DskipTests
 
-# Create final image
-FROM openjdk:17-jre-slim
+# Final runtime image
+FROM eclipse-temurin:17-jre-alpine
 
 # Install curl for health checks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache curl
 
 WORKDIR /app
 
 # Copy jar from build stage
-COPY --from=0 /app/target/*.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
 
 # Create non-root user
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+RUN addgroup -g 1001 -S appuser && \
+    adduser -S appuser -u 1001 -G appuser
 RUN chown -R appuser:appuser /app
 USER appuser
 
