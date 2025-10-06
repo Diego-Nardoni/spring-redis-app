@@ -14,4 +14,4 @@ RUN mvn clean package -DskipTests
 
 # Run application
 EXPOSE 8080
-CMD ["java", "-jar", "target/demo-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "target/spring-redis-poc-1.0.0.jar"]
