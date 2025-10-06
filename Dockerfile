@@ -9,11 +9,17 @@ COPY src ./src
 # Install Maven
 RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
 
-# Build application
-RUN mvn clean package -DskipTests
+# Clean any existing builds and compile
+RUN mvn clean compile
 
-# Verify JAR exists and list target directory
-RUN ls -la target/
+# Verify no duplicate classes
+RUN find . -name "*.class" -path "*/SessionController*" | wc -l
+
+# Build application
+RUN mvn package -DskipTests
+
+# Verify JAR exists
+RUN ls -la target/spring-redis-poc-1.0.0.jar
 
 # Run application
 EXPOSE 8080
