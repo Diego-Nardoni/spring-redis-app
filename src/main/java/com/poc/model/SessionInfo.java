@@ -2,7 +2,6 @@ package com.poc.model;
 
 import lombok.Builder;
 import lombok.Data;
-import java.time.Instant;
 import java.util.Map;
 
 @Data
@@ -10,8 +9,8 @@ import java.util.Map;
 public class SessionInfo {
     private String sessionId;
     private boolean isNew;
-    private Instant creationTime;
-    private Instant lastAccessedTime;
+    private long creationTime;
+    private long lastAccessedTime;
     private int maxInactiveInterval;
     private Map<String, Object> attributes;
     private Integer counter;
