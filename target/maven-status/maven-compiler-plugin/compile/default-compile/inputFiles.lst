@@ -3,4 +3,5 @@
 /home/modern-redis-app/src/main/java/com/modernapp/service/RedisHealthService.java
 /home/modern-redis-app/src/main/java/com/modernapp/model/SessionData.java
 /home/modern-redis-app/src/main/java/com/modernapp/service/SessionService.java
+/home/modern-redis-app/src/main/java/com/modernapp/config/RedisConfig.java
 /home/modern-redis-app/src/main/java/com/modernapp/ModernRedisApplication.java
