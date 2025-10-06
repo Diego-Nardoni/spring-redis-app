@@ -26,12 +26,13 @@ public class CircuitBreakerTestController {
         Map<String, Object> status = new HashMap<>();
         
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("redis-service");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         
         status.put("circuitBreakerState", circuitBreaker.getState().toString());
-        status.put("failureRate", circuitBreaker.getMetrics().getFailureRate());
-        status.put("numberOfCalls", circuitBreaker.getMetrics().getNumberOfCalls());
-        status.put("numberOfFailedCalls", circuitBreaker.getMetrics().getNumberOfFailedCalls());
-        status.put("numberOfSuccessfulCalls", circuitBreaker.getMetrics().getNumberOfSuccessfulCalls());
+        status.put("failureRate", metrics.getFailureRate());
+        status.put("numberOfBufferedCalls", metrics.getNumberOfBufferedCalls());
+        status.put("numberOfFailedCalls", metrics.getNumberOfFailedCalls());
+        status.put("numberOfSuccessfulCalls", metrics.getNumberOfSuccessfulCalls());
         status.put("localCacheStatus", redisService.getLocalCacheStatus());
         
         return ResponseEntity.ok(status);
