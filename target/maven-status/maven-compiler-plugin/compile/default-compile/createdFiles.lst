@@ -1,9 +1,0 @@
-com/poc/Application.class
-com/poc/config/RedisConfig.class
-com/poc/HelloController.class
-com/poc/SessionConfig.class
-com/poc/controller/CircuitBreakerTestController.class
-com/poc/service/RedisService.class
-com/poc/model/SessionInfo$SessionInfoBuilder.class
-com/poc/HomeController.class
-com/poc/model/SessionInfo.class
