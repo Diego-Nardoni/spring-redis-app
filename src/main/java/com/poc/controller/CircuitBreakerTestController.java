@@ -1,0 +1,141 @@
+package com.poc.controller;
+
+import com.poc.service.RedisService;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/circuit-breaker")
+public class CircuitBreakerTestController {
+    
+    @Autowired
+    private RedisService redisService;
+    
+    @Autowired
+    private CircuitBreakerRegistry circuitBreakerRegistry;
+    
+    @GetMapping("/status")
+    public ResponseEntity<Map<String, Object>> getCircuitBreakerStatus() {
+        Map<String, Object> status = new HashMap<>();
+        
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("redis-service");
+        
+        status.put("circuitBreakerState", circuitBreaker.getState().toString());
+        status.put("failureRate", circuitBreaker.getMetrics().getFailureRate());
+        status.put("numberOfCalls", circuitBreaker.getMetrics().getNumberOfCalls());
+        status.put("numberOfFailedCalls", circuitBreaker.getMetrics().getNumberOfFailedCalls());
+        status.put("numberOfSuccessfulCalls", circuitBreaker.getMetrics().getNumberOfSuccessfulCalls());
+        status.put("localCacheStatus", redisService.getLocalCacheStatus());
+        
+        return ResponseEntity.ok(status);
+    }
+    
+    @PostMapping("/test-redis/{key}")
+    public ResponseEntity<Map<String, Object>> testRedis(
+            @PathVariable String key,
+            @RequestParam(required = false, defaultValue = "test-value") String value) {
+        
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            // Testa escrita
+            redisService.setValue(key, value, Duration.ofMinutes(5));
+            result.put("writeStatus", "SUCCESS");
+            
+            // Testa leitura
+            Object readValue = redisService.getValue(key);
+            result.put("readStatus", "SUCCESS");
+            result.put("readValue", readValue);
+            
+            // Testa conexão
+            String connectionStatus = redisService.checkConnection();
+            result.put("connectionStatus", connectionStatus);
+            
+        } catch (Exception e) {
+            result.put("error", e.getMessage());
+            result.put("status", "FAILED");
+        }
+        
+        return ResponseEntity.ok(result);
+    }
+    
+    @GetMapping("/test-redis/{key}")
+    public ResponseEntity<Map<String, Object>> getFromRedis(@PathVariable String key) {
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            Object value = redisService.getValue(key);
+            result.put("key", key);
+            result.put("value", value);
+            result.put("status", "SUCCESS");
+            
+        } catch (Exception e) {
+            result.put("error", e.getMessage());
+            result.put("status", "FAILED");
+        }
+        
+        return ResponseEntity.ok(result);
+    }
+    
+    @DeleteMapping("/test-redis/{key}")
+    public ResponseEntity<Map<String, Object>> deleteFromRedis(@PathVariable String key) {
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            Boolean deleted = redisService.deleteKey(key);
+            result.put("key", key);
+            result.put("deleted", deleted);
+            result.put("status", "SUCCESS");
+            
+        } catch (Exception e) {
+            result.put("error", e.getMessage());
+            result.put("status", "FAILED");
+        }
+        
+        return ResponseEntity.ok(result);
+    }
+    
+    @PostMapping("/force-circuit-open")
+    public ResponseEntity<Map<String, Object>> forceCircuitOpen() {
+        Map<String, Object> result = new HashMap<>();
+        
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("redis-service");
+        circuitBreaker.transitionToOpenState();
+        
+        result.put("message", "Circuit Breaker forçado para estado OPEN");
+        result.put("newState", circuitBreaker.getState().toString());
+        
+        return ResponseEntity.ok(result);
+    }
+    
+    @PostMapping("/force-circuit-closed")
+    public ResponseEntity<Map<String, Object>> forceCircuitClosed() {
+        Map<String, Object> result = new HashMap<>();
+        
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("redis-service");
+        circuitBreaker.transitionToClosedState();
+        
+        result.put("message", "Circuit Breaker forçado para estado CLOSED");
+        result.put("newState", circuitBreaker.getState().toString());
+        
+        return ResponseEntity.ok(result);
+    }
+    
+    @PostMapping("/clear-local-cache")
+    public ResponseEntity<Map<String, Object>> clearLocalCache() {
+        Map<String, Object> result = new HashMap<>();
+        
+        redisService.clearLocalCache();
+        result.put("message", "Cache local limpo com sucesso");
+        result.put("localCacheStatus", redisService.getLocalCacheStatus());
+        
+        return ResponseEntity.ok(result);
+    }
+}
