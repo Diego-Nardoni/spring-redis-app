@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Redis Session Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/dashboard.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-server me-2"></i>
+                Modern Redis Session Manager
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text">
+                    <i class="fas fa-cloud me-1"></i>
+                    <span th:text="${session.region}">us-east-1</span>
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Session Overview -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user-circle me-2"></i>
+                            Session Overview
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <strong>Session ID:</strong>
+                                    <code th:text="${session.sessionId}">session-id</code>
+                                    <button class="btn btn-sm btn-outline-secondary ms-2" onclick="copyToClipboard(this.previousElementSibling.textContent)">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                                <div class="info-item">
+                                    <strong>User ID:</strong>
+                                    <span th:text="${session.userId}">user-id</span>
+                                </div>
+                                <div class="info-item">
+                                    <strong>Request Count:</strong>
+                                    <span class="badge bg-success" th:text="${session.requestCount}">1</span>
+                                </div>
+                                <div class="info-item">
+                                    <strong>Session Status:</strong>
+                                    <span class="badge" th:classappend="${session.isNew} ? 'bg-warning' : 'bg-info'" 
+                                          th:text="${session.isNew} ? 'New Session' : 'Existing Session'">Status</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <strong>Created:</strong>
+                                    <span th:text="${#temporals.format(session.creationTime, 'yyyy-MM-dd HH:mm:ss')}">creation-time</span>
+                                </div>
+                                <div class="info-item">
+                                    <strong>Last Accessed:</strong>
+                                    <span th:text="${#temporals.format(session.lastAccessedTime, 'yyyy-MM-dd HH:mm:ss')}">last-access</span>
+                                </div>
+                                <div class="info-item">
+                                    <strong>Container:</strong>
+                                    <code th:text="${session.containerInfo}">container-id</code>
+                                </div>
+                                <div class="info-item">
+                                    <strong>Region:</strong>
+                                    <span class="badge bg-secondary" th:text="${session.region}">us-east-1</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Redis Health & Performance -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-heartbeat me-2"></i>
+                            Redis Health
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="health-status" th:if="${session.redisHealth}">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="status-indicator" 
+                                     th:classappend="${session.redisHealth.connected} ? 'bg-success' : 'bg-danger'"></div>
+                                <span class="ms-2" th:text="${session.redisHealth.status}">Status</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Response Time:</strong>
+                                <span th:text="${session.redisHealth.responseTimeMs} + ' ms'">0 ms</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Connection:</strong>
+                                <span class="badge" 
+                                      th:classappend="${session.redisHealth.connected} ? 'bg-success' : 'bg-danger'"
+                                      th:text="${session.redisHealth.connected} ? 'Connected' : 'Disconnected'">Status</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-outline-success btn-sm mt-2" onclick="testRedisHealth()">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Test Connection
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            Performance Metrics
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${session.performance}">
+                            <div class="info-item">
+                                <strong>Session Retrieval:</strong>
+                                <span th:text="${session.performance.sessionRetrievalTimeMs} + ' ms'">0 ms</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Session Save:</strong>
+                                <span th:text="${session.performance.sessionSaveTimeMs} + ' ms'">0 ms</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Active Connections:</strong>
+                                <span class="badge bg-primary" th:text="${session.performance.activeConnections}">0</span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <strong>Performance Test:</strong>
+                            <span class="badge" 
+                                  th:classappend="${performanceTest} ? 'bg-success' : 'bg-warning'"
+                                  th:text="${performanceTest} ? 'Passed' : 'Failed'">Status</span>
+                        </div>
+                        <button class="btn btn-outline-info btn-sm mt-2" onclick="runPerformanceTest()">
+                            <i class="fas fa-play me-1"></i>
+                            Run Test
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Redis Information -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-database me-2"></i>
+                            Redis Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" th:if="${redisInfo}">
+                            <div class="col-md-4">
+                                <div class="info-item">
+                                    <strong>Version:</strong>
+                                    <span th:text="${redisInfo.version}">unknown</span>
+                                </div>
+                                <div class="info-item">
+                                    <strong>Uptime:</strong>
+                                    <span th:text="${redisInfo.uptime} + ' seconds'">0 seconds</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="info-item">
+                                    <strong>Connected Clients:</strong>
+                                    <span th:text="${redisInfo.connected_clients}">0</span>
+                                </div>
+                                <div class="info-item">
+                                    <strong>Used Memory:</strong>
+                                    <span th:text="${redisInfo.used_memory}">0</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="info-item">
+                                    <strong>Commands Processed:</strong>
+                                    <span th:text="${redisInfo.total_commands_processed}">0</span>
+                                </div>
+                                <div class="info-item">
+                                    <strong>Cache Hit Ratio:</strong>
+                                    <span id="hitRatio">Calculating...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Session Attributes -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tags me-2"></i>
+                            Session Attributes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="attrKey" placeholder="Attribute Key">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="attrValue" placeholder="Attribute Value">
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-primary" onclick="setSessionAttribute()">
+                                    <i class="fas fa-plus me-1"></i>
+                                    Add Attribute
+                                </button>
+                            </div>
+                        </div>
+                        <div id="attributesList">
+                            <div th:if="${session.customAttributes}" th:each="attr : ${session.customAttributes}">
+                                <div class="attribute-item">
+                                    <strong th:text="${attr.key}">key</strong>: 
+                                    <span th:text="${attr.value}">value</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cogs me-2"></i>
+                            Actions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-primary me-2" onclick="refreshPage()">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Refresh Session
+                        </button>
+                        <button class="btn btn-info me-2" onclick="getSessionAnalytics()">
+                            <i class="fas fa-chart-bar me-1"></i>
+                            View Analytics
+                        </button>
+                        <button class="btn btn-success me-2" onclick="exportSessionData()">
+                            <i class="fas fa-download me-1"></i>
+                            Export Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="toast" class="toast" role="alert">
+            <div class="toast-header">
+                <strong class="me-auto">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toastBody">
+                Message
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/dashboard.js"></script>
+    <script th:inline="javascript">
+        // Calculate hit ratio
+        const hits = /*[[${redisInfo.keyspace_hits}]]*/ 0;
+        const misses = /*[[${redisInfo.keyspace_misses}]]*/ 0;
+        const total = hits + misses;
+        const hitRatio = total > 0 ? ((hits / total) * 100).toFixed(2) + '%' : 'N/A';
+        document.getElementById('hitRatio').textContent = hitRatio;
+    </script>
+</body>
+</html>
