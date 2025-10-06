@@ -1,42 +1,46 @@
 package com.poc.model;
 
+import java.time.Instant;
+import java.util.Map;
+
 public class SessionInfo {
     private String sessionId;
-    private String containerId;
-    private String timestamp;
-    private int visitCount;
-
+    private boolean isNew;
+    private Instant creationTime;
+    private Instant lastAccessedTime;
+    private int maxInactiveInterval;
+    private Map<String, Object> attributes;
+    
+    // Constructors
     public SessionInfo() {}
-
-    public static SessionInfoBuilder builder() {
-        return new SessionInfoBuilder();
+    
+    public SessionInfo(String sessionId, boolean isNew, Instant creationTime, 
+                      Instant lastAccessedTime, int maxInactiveInterval, 
+                      Map<String, Object> attributes) {
+        this.sessionId = sessionId;
+        this.isNew = isNew;
+        this.creationTime = creationTime;
+        this.lastAccessedTime = lastAccessedTime;
+        this.maxInactiveInterval = maxInactiveInterval;
+        this.attributes = attributes;
     }
-
+    
+    // Getters and Setters
     public String getSessionId() { return sessionId; }
     public void setSessionId(String sessionId) { this.sessionId = sessionId; }
-
-    public String getContainerId() { return containerId; }
-    public void setContainerId(String containerId) { this.containerId = containerId; }
-
-    public String getTimestamp() { return timestamp; }
-    public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
-
-    public int getVisitCount() { return visitCount; }
-    public void setVisitCount(int visitCount) { this.visitCount = visitCount; }
-
-    public static class SessionInfoBuilder {
-        private SessionInfo info = new SessionInfo();
-
-        public SessionInfoBuilder sessionId(String sessionId) { info.sessionId = sessionId; return this; }
-        public SessionInfoBuilder containerId(String containerId) { info.containerId = containerId; return this; }
-        public SessionInfoBuilder timestamp(String timestamp) { info.timestamp = timestamp; return this; }
-        public SessionInfoBuilder visitCount(int visitCount) { info.visitCount = visitCount; return this; }
-        public SessionInfoBuilder counter(Integer counter) { info.visitCount = counter; return this; }
-        public SessionInfoBuilder isNew(boolean isNew) { return this; }
-        public SessionInfoBuilder creationTime(long creationTime) { return this; }
-        public SessionInfoBuilder lastAccessedTime(long lastAccessedTime) { return this; }
-        public SessionInfoBuilder containerInfo(String containerInfo) { return this; }
-
-        public SessionInfo build() { return info; }
-    }
+    
+    public boolean isNew() { return isNew; }
+    public void setNew(boolean isNew) { this.isNew = isNew; }
+    
+    public Instant getCreationTime() { return creationTime; }
+    public void setCreationTime(Instant creationTime) { this.creationTime = creationTime; }
+    
+    public Instant getLastAccessedTime() { return lastAccessedTime; }
+    public void setLastAccessedTime(Instant lastAccessedTime) { this.lastAccessedTime = lastAccessedTime; }
+    
+    public int getMaxInactiveInterval() { return maxInactiveInterval; }
+    public void setMaxInactiveInterval(int maxInactiveInterval) { this.maxInactiveInterval = maxInactiveInterval; }
+    
+    public Map<String, Object> getAttributes() { return attributes; }
+    public void setAttributes(Map<String, Object> attributes) { this.attributes = attributes; }
 }

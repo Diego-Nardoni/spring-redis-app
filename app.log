@@ -1,0 +1,122 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.1.5)
+
+2025-10-06 16:06:46 [main] INFO  [] com.poc.Application - Starting Application v1.0.0 using Java 17.0.16 with PID 2428 (/home/spring-redis-app/target/spring-redis-poc-1.0.0.jar started by root in /home/spring-redis-app)
+2025-10-06 16:06:46 [main] INFO  [] com.poc.Application - No active profile set, falling back to 1 default profile: "default"
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.AspectJOnClasspathCondition - Aspects are not activated because AspectJ is not on the classpath.
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.AspectJOnClasspathCondition - Aspects are not activated because AspectJ is not on the classpath.
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.RxJava2OnClasspathCondition - RxJava2 related Aspect extensions are not activated, because RxJava2 is not on the classpath.
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.ReactorOnClasspathCondition - Reactor related Aspect extensions are not activated because Resilience4j Reactor module is not on the classpath.
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.AspectJOnClasspathCondition - Aspects are not activated because AspectJ is not on the classpath.
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.RxJava2OnClasspathCondition - RxJava2 related Aspect extensions are not activated, because RxJava2 is not on the classpath.
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.ReactorOnClasspathCondition - Reactor related Aspect extensions are not activated because Resilience4j Reactor module is not on the classpath.
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.AspectJOnClasspathCondition - Aspects are not activated because AspectJ is not on the classpath.
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.RxJava2OnClasspathCondition - RxJava2 related Aspect extensions are not activated, because RxJava2 is not on the classpath.
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.ReactorOnClasspathCondition - Reactor related Aspect extensions are not activated because Resilience4j Reactor module is not on the classpath.
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.AspectJOnClasspathCondition - Aspects are not activated because AspectJ is not on the classpath.
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.RxJava2OnClasspathCondition - RxJava2 related Aspect extensions are not activated, because RxJava2 is not on the classpath.
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.ReactorOnClasspathCondition - Reactor related Aspect extensions are not activated because Resilience4j Reactor module is not on the classpath.
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.AspectJOnClasspathCondition - Aspects are not activated because AspectJ is not on the classpath.
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.RxJava2OnClasspathCondition - RxJava2 related Aspect extensions are not activated, because RxJava2 is not on the classpath.
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.ReactorOnClasspathCondition - Reactor related Aspect extensions are not activated because Resilience4j Reactor module is not on the classpath.
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.AspectJOnClasspathCondition - Aspects are not activated because AspectJ is not on the classpath.
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.RxJava2OnClasspathCondition - RxJava2 related Aspect extensions are not activated, because RxJava2 is not on the classpath.
+2025-10-06 16:06:50 [main] DEBUG [] i.g.r.s.u.ReactorOnClasspathCondition - Reactor related Aspect extensions are not activated because Resilience4j Reactor module is not on the classpath.
+2025-10-06 16:06:51 [main] INFO  [] o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-10-06 16:06:51 [main] INFO  [] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2025-10-06 16:06:51 [main] INFO  [] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 41 ms. Found 0 Redis repository interfaces.
+2025-10-06 16:06:54 [main] INFO  [] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port(s): 8080 (http)
+2025-10-06 16:06:54 [main] INFO  [] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-10-06 16:06:54 [main] INFO  [] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.15]
+2025-10-06 16:06:55 [main] INFO  [] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-10-06 16:06:55 [main] INFO  [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 8100 ms
+2025-10-06 16:06:55 [main] DEBUG [] o.s.w.f.ServerHttpObservationFilter - Filter 'webMvcObservationFilter' configured for use
+2025-10-06 16:06:55 [main] DEBUG [] o.s.web.filter.ForwardedHeaderFilter - Filter 'forwardedHeaderFilter' configured for use
+2025-10-06 16:07:00 [main] DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerAdapter - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-10-06 16:07:00 [main] DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - 12 mappings in 'requestMappingHandlerMapping'
+2025-10-06 16:07:00 [main] DEBUG [] o.s.w.s.h.SimpleUrlHandlerMapping - Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
+2025-10-06 16:07:00 [main] DEBUG [] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - ControllerAdvice beans: 0 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-10-06 16:07:01 [main] WARN  [] o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+2025-10-06 16:07:02 [main] DEBUG [] o.s.d.r.l.RedisMessageListenerContainer - Starting RedisMessageListenerContainer...
+2025-10-06 16:07:02 [main] DEBUG [] o.s.d.r.l.RedisMessageListenerContainer - Postpone listening for Redis messages until actual listeners are added
+2025-10-06 16:07:03 [main] INFO  [] o.s.b.a.e.web.EndpointLinksResolver - Exposing 5 endpoint(s) beneath base path '/actuator'
+2025-10-06 16:07:05 [main] INFO  [] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port(s): 8080 (http) with context path ''
+2025-10-06 16:07:05 [main] INFO  [] com.poc.Application - Started Application in 20.528 seconds (process running for 22.642)
+2025-10-06 16:07:12 [http-nio-8080-exec-1] INFO  [] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-10-06 16:07:12 [http-nio-8080-exec-1] INFO  [] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-10-06 16:07:12 [http-nio-8080-exec-1] DEBUG [] o.s.web.servlet.DispatcherServlet - Detected StandardServletMultipartResolver
+2025-10-06 16:07:12 [http-nio-8080-exec-1] DEBUG [] o.s.web.servlet.DispatcherServlet - Detected AcceptHeaderLocaleResolver
+2025-10-06 16:07:12 [http-nio-8080-exec-1] DEBUG [] o.s.web.servlet.DispatcherServlet - Detected FixedThemeResolver
+2025-10-06 16:07:12 [http-nio-8080-exec-1] DEBUG [] o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@5d6a5a69
+2025-10-06 16:07:12 [http-nio-8080-exec-1] DEBUG [] o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.support.SessionFlashMapManager@11a08f85
+2025-10-06 16:07:12 [http-nio-8080-exec-1] DEBUG [] o.s.web.servlet.DispatcherServlet - enableLoggingRequestDetails='false': request parameters and headers will be masked to prevent unsafe logging of potentially sensitive data
+2025-10-06 16:07:12 [http-nio-8080-exec-1] INFO  [] o.s.web.servlet.DispatcherServlet - Completed initialization in 6 ms
+2025-10-06 16:07:12 [http-nio-8080-exec-1] DEBUG [] o.s.web.servlet.DispatcherServlet - GET "/api/circuit-breaker/status", parameters={}
+2025-10-06 16:07:12 [http-nio-8080-exec-1] DEBUG [] o.s.s.w.h.S.SESSION_LOGGER - No session found by id: Caching result for getSession(false) for this HttpServletRequest.
+2025-10-06 16:07:12 [http-nio-8080-exec-1] DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.poc.controller.CircuitBreakerTestController#getCircuitBreakerStatus()
+2025-10-06 16:07:12 [http-nio-8080-exec-1] DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-10-06 16:07:12 [http-nio-8080-exec-1] DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [{numberOfSuccessfulCalls=0, failureRate=-1.0, numberOfFailedCalls=0, localCacheStatus={localCacheSiz (truncated)...]
+2025-10-06 16:07:12 [http-nio-8080-exec-1] DEBUG [] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-10-06 16:07:12 [http-nio-8080-exec-1] DEBUG [] o.s.s.w.h.S.SESSION_LOGGER - No session found by id: Caching result for getSession(false) for this HttpServletRequest.
+2025-10-06 16:07:17 [http-nio-8080-exec-2] DEBUG [] o.s.web.servlet.DispatcherServlet - GET "/api/circuit-breaker/simple-test/test-key", parameters={}
+2025-10-06 16:07:17 [http-nio-8080-exec-2] DEBUG [] o.s.s.w.h.S.SESSION_LOGGER - No session found by id: Caching result for getSession(false) for this HttpServletRequest.
+2025-10-06 16:07:17 [http-nio-8080-exec-2] DEBUG [] o.s.w.s.h.SimpleUrlHandlerMapping - Mapped to ResourceHttpRequestHandler [classpath [META-INF/resources/], classpath [resources/], classpath [static/], classpath [public/], ServletContext [/]]
+2025-10-06 16:07:17 [http-nio-8080-exec-2] DEBUG [] o.s.w.s.r.ResourceHttpRequestHandler - Resource not found
+2025-10-06 16:07:17 [http-nio-8080-exec-2] DEBUG [] o.s.web.servlet.DispatcherServlet - Completed 404 NOT_FOUND
+2025-10-06 16:07:17 [http-nio-8080-exec-2] DEBUG [] o.s.s.w.h.S.SESSION_LOGGER - No session found by id: Caching result for getSession(false) for this HttpServletRequest.
+2025-10-06 16:07:17 [http-nio-8080-exec-2] DEBUG [] o.s.web.servlet.DispatcherServlet - "ERROR" dispatch for GET "/error", parameters={}
+2025-10-06 16:07:17 [http-nio-8080-exec-2] DEBUG [] o.s.s.w.h.S.SESSION_LOGGER - No session found by id: Caching result for getSession(false) for this HttpServletRequest.
+2025-10-06 16:07:17 [http-nio-8080-exec-2] DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController#error(HttpServletRequest)
+2025-10-06 16:07:17 [http-nio-8080-exec-2] DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-10-06 16:07:17 [http-nio-8080-exec-2] DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [{timestamp=Mon Oct 06 16:07:17 UTC 2025, status=404, error=Not Found, path=/api/circuit-breaker/simp (truncated)...]
+2025-10-06 16:07:17 [http-nio-8080-exec-2] DEBUG [] o.s.web.servlet.DispatcherServlet - Exiting from "ERROR" dispatch, status 404
+2025-10-06 16:07:17 [http-nio-8080-exec-2] DEBUG [] o.s.s.w.h.S.SESSION_LOGGER - No session found by id: Caching result for getSession(false) for this HttpServletRequest.
+2025-10-06 16:07:49 [http-nio-8080-exec-5] DEBUG [] o.s.web.servlet.DispatcherServlet - GET "/api/circuit-breaker/status", parameters={}
+2025-10-06 16:07:49 [http-nio-8080-exec-5] DEBUG [] o.s.s.w.h.S.SESSION_LOGGER - No session found by id: Caching result for getSession(false) for this HttpServletRequest.
+2025-10-06 16:07:49 [http-nio-8080-exec-5] DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.poc.controller.CircuitBreakerTestController#getCircuitBreakerStatus()
+2025-10-06 16:07:49 [http-nio-8080-exec-5] DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-10-06 16:07:49 [http-nio-8080-exec-5] DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [{numberOfSuccessfulCalls=0, failureRate=-1.0, numberOfFailedCalls=0, localCacheStatus={localCacheSiz (truncated)...]
+2025-10-06 16:07:49 [http-nio-8080-exec-5] DEBUG [] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-10-06 16:07:49 [http-nio-8080-exec-5] DEBUG [] o.s.s.w.h.S.SESSION_LOGGER - No session found by id: Caching result for getSession(false) for this HttpServletRequest.
+2025-10-06 16:07:49 [http-nio-8080-exec-7] DEBUG [] o.s.web.servlet.DispatcherServlet - POST "/api/circuit-breaker/force-circuit-open", parameters={}
+2025-10-06 16:07:49 [http-nio-8080-exec-7] DEBUG [] o.s.s.w.h.S.SESSION_LOGGER - No session found by id: Caching result for getSession(false) for this HttpServletRequest.
+2025-10-06 16:07:49 [http-nio-8080-exec-7] DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.poc.controller.CircuitBreakerTestController#forceCircuitOpen()
+2025-10-06 16:07:49 [http-nio-8080-exec-7] DEBUG [] i.g.r.c.i.CircuitBreakerStateMachine - Event STATE_TRANSITION published: 2025-10-06T16:07:49.254885736Z[Etc/UTC]: CircuitBreaker 'redis-service' changed state from CLOSED to OPEN
+2025-10-06 16:07:49 [http-nio-8080-exec-7] DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-10-06 16:07:49 [http-nio-8080-exec-7] DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [{message=Circuit Breaker forçado para estado OPEN, newState=OPEN}]
+2025-10-06 16:07:49 [http-nio-8080-exec-7] DEBUG [] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-10-06 16:07:49 [http-nio-8080-exec-7] DEBUG [] o.s.s.w.h.S.SESSION_LOGGER - No session found by id: Caching result for getSession(false) for this HttpServletRequest.
+2025-10-06 16:07:49 [http-nio-8080-exec-9] DEBUG [] o.s.web.servlet.DispatcherServlet - GET "/api/circuit-breaker/status", parameters={}
+2025-10-06 16:07:49 [http-nio-8080-exec-9] DEBUG [] o.s.s.w.h.S.SESSION_LOGGER - No session found by id: Caching result for getSession(false) for this HttpServletRequest.
+2025-10-06 16:07:49 [http-nio-8080-exec-9] DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.poc.controller.CircuitBreakerTestController#getCircuitBreakerStatus()
+2025-10-06 16:07:49 [http-nio-8080-exec-9] DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-10-06 16:07:49 [http-nio-8080-exec-9] DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [{numberOfSuccessfulCalls=0, failureRate=-1.0, numberOfFailedCalls=0, localCacheStatus={localCacheSiz (truncated)...]
+2025-10-06 16:07:49 [http-nio-8080-exec-9] DEBUG [] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-10-06 16:07:49 [http-nio-8080-exec-9] DEBUG [] o.s.s.w.h.S.SESSION_LOGGER - No session found by id: Caching result for getSession(false) for this HttpServletRequest.
+2025-10-06 16:07:49 [http-nio-8080-exec-10] DEBUG [] o.s.web.servlet.DispatcherServlet - GET "/actuator/circuitbreakers", parameters={}
+2025-10-06 16:07:49 [http-nio-8080-exec-10] DEBUG [] o.s.s.w.h.S.SESSION_LOGGER - No session found by id: Caching result for getSession(false) for this HttpServletRequest.
+2025-10-06 16:07:49 [http-nio-8080-exec-10] DEBUG [] o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Using 'application/vnd.spring-boot.actuator.v3+json', given [*/*] and supported [application/vnd.spring-boot.actuator.v3+json, application/vnd.spring-boot.actuator.v2+json, application/json]
+2025-10-06 16:07:49 [http-nio-8080-exec-10] DEBUG [] o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Writing [io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse@77f4 (truncated)...]
+2025-10-06 16:07:49 [http-nio-8080-exec-10] DEBUG [] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-10-06 16:07:49 [http-nio-8080-exec-10] DEBUG [] o.s.s.w.h.S.SESSION_LOGGER - No session found by id: Caching result for getSession(false) for this HttpServletRequest.
+2025-10-06 16:07:49 [http-nio-8080-exec-1] DEBUG [] o.s.web.servlet.DispatcherServlet - POST "/api/circuit-breaker/force-circuit-closed", parameters={}
+2025-10-06 16:07:49 [http-nio-8080-exec-1] DEBUG [] o.s.s.w.h.S.SESSION_LOGGER - No session found by id: Caching result for getSession(false) for this HttpServletRequest.
+2025-10-06 16:07:49 [http-nio-8080-exec-1] DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.poc.controller.CircuitBreakerTestController#forceCircuitClosed()
+2025-10-06 16:07:49 [http-nio-8080-exec-1] DEBUG [] i.g.r.c.i.CircuitBreakerStateMachine - Event STATE_TRANSITION published: 2025-10-06T16:07:49.507164486Z[Etc/UTC]: CircuitBreaker 'redis-service' changed state from OPEN to CLOSED
+2025-10-06 16:07:49 [http-nio-8080-exec-1] DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-10-06 16:07:49 [http-nio-8080-exec-1] DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [{message=Circuit Breaker forçado para estado CLOSED, newState=CLOSED}]
+2025-10-06 16:07:49 [http-nio-8080-exec-1] DEBUG [] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-10-06 16:07:49 [http-nio-8080-exec-1] DEBUG [] o.s.s.w.h.S.SESSION_LOGGER - No session found by id: Caching result for getSession(false) for this HttpServletRequest.
+2025-10-06 16:07:49 [http-nio-8080-exec-2] DEBUG [] o.s.web.servlet.DispatcherServlet - GET "/api/circuit-breaker/status", parameters={}
+2025-10-06 16:07:49 [http-nio-8080-exec-2] DEBUG [] o.s.s.w.h.S.SESSION_LOGGER - No session found by id: Caching result for getSession(false) for this HttpServletRequest.
+2025-10-06 16:07:49 [http-nio-8080-exec-2] DEBUG [] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.poc.controller.CircuitBreakerTestController#getCircuitBreakerStatus()
+2025-10-06 16:07:49 [http-nio-8080-exec-2] DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-10-06 16:07:49 [http-nio-8080-exec-2] DEBUG [] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [{numberOfSuccessfulCalls=0, failureRate=-1.0, numberOfFailedCalls=0, localCacheStatus={localCacheSiz (truncated)...]
+2025-10-06 16:07:49 [http-nio-8080-exec-2] DEBUG [] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-10-06 16:07:49 [http-nio-8080-exec-2] DEBUG [] o.s.s.w.h.S.SESSION_LOGGER - No session found by id: Caching result for getSession(false) for this HttpServletRequest.

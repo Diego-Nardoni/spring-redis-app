@@ -45,24 +45,18 @@ public class CircuitBreakerTestController {
         
         Map<String, Object> result = new HashMap<>();
         
-        try {
-            // Testa escrita
-            redisService.setValue(key, value, Duration.ofMinutes(5));
-            result.put("writeStatus", "SUCCESS");
-            
-            // Testa leitura
-            Object readValue = redisService.getValue(key);
-            result.put("readStatus", "SUCCESS");
-            result.put("readValue", readValue);
-            
-            // Testa conexão
-            String connectionStatus = redisService.checkConnection();
-            result.put("connectionStatus", connectionStatus);
-            
-        } catch (Exception e) {
-            result.put("error", e.getMessage());
-            result.put("status", "FAILED");
-        }
+        // Testa escrita (circuit breaker vai interceptar se necessário)
+        redisService.setValue(key, value, Duration.ofMinutes(5));
+        result.put("writeStatus", "SUCCESS");
+        
+        // Testa leitura (circuit breaker vai interceptar se necessário)
+        Object readValue = redisService.getValue(key);
+        result.put("readStatus", "SUCCESS");
+        result.put("readValue", readValue);
+        
+        // Testa conexão (circuit breaker vai interceptar se necessário)
+        String connectionStatus = redisService.checkConnection();
+        result.put("connectionStatus", connectionStatus);
         
         return ResponseEntity.ok(result);
     }
@@ -71,16 +65,10 @@ public class CircuitBreakerTestController {
     public ResponseEntity<Map<String, Object>> getFromRedis(@PathVariable String key) {
         Map<String, Object> result = new HashMap<>();
         
-        try {
-            Object value = redisService.getValue(key);
-            result.put("key", key);
-            result.put("value", value);
-            result.put("status", "SUCCESS");
-            
-        } catch (Exception e) {
-            result.put("error", e.getMessage());
-            result.put("status", "FAILED");
-        }
+        Object value = redisService.getValue(key);
+        result.put("key", key);
+        result.put("value", value);
+        result.put("status", "SUCCESS");
         
         return ResponseEntity.ok(result);
     }
@@ -89,16 +77,10 @@ public class CircuitBreakerTestController {
     public ResponseEntity<Map<String, Object>> deleteFromRedis(@PathVariable String key) {
         Map<String, Object> result = new HashMap<>();
         
-        try {
-            Boolean deleted = redisService.deleteKey(key);
-            result.put("key", key);
-            result.put("deleted", deleted);
-            result.put("status", "SUCCESS");
-            
-        } catch (Exception e) {
-            result.put("error", e.getMessage());
-            result.put("status", "FAILED");
-        }
+        Boolean deleted = redisService.deleteKey(key);
+        result.put("key", key);
+        result.put("deleted", deleted);
+        result.put("status", "SUCCESS");
         
         return ResponseEntity.ok(result);
     }
@@ -125,6 +107,19 @@ public class CircuitBreakerTestController {
         
         result.put("message", "Circuit Breaker forçado para estado CLOSED");
         result.put("newState", circuitBreaker.getState().toString());
+        
+        return ResponseEntity.ok(result);
+    }
+    
+    @GetMapping("/simple-test/{key}")
+    public ResponseEntity<Map<String, Object>> simpleTest(@PathVariable String key) {
+        Map<String, Object> result = new HashMap<>();
+        
+        // Teste simples de leitura que vai usar fallback se circuit estiver aberto
+        Object value = redisService.getValue(key);
+        result.put("key", key);
+        result.put("value", value);
+        result.put("source", value != null ? "redis_or_cache" : "not_found");
         
         return ResponseEntity.ok(result);
     }
