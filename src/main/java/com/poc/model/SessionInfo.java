@@ -14,4 +14,5 @@ public class SessionInfo {
     private int maxInactiveInterval;
     private Map<String, Object> attributes;
     private Integer counter;
+    private String containerInfo;
 }
