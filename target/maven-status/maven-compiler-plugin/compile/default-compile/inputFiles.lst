@@ -5,5 +5,4 @@
 /home/spring-redis-app/src/main/java/com/poc/SessionConfig.java
 /home/spring-redis-app/src/main/java/com/poc/controller/CircuitBreakerTestController.java
 /home/spring-redis-app/src/main/java/com/poc/HomeController.java
-/home/spring-redis-app/src/main/java/com/poc/SessionController.java
 /home/spring-redis-app/src/main/java/com/poc/config/RedisConfig.java

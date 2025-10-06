@@ -1,6 +1,5 @@
 com/poc/Application.class
 com/poc/config/RedisConfig.class
-com/poc/SessionController.class
 com/poc/HelloController.class
 com/poc/SessionConfig.class
 com/poc/controller/CircuitBreakerTestController.class
