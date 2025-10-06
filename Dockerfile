@@ -1,5 +1,5 @@
 # Multi-stage build for optimal image size
-FROM openjdk:17-jdk-slim as builder
+FROM openjdk:17-jdk-slim AS builder
 
 WORKDIR /app
 
@@ -19,17 +19,16 @@ RUN mvn clean package -DskipTests
 RUN ls -la target/redis-session-manager-2.0.0.jar
 
 # Production stage
-FROM openjdk:17-jre-slim
+FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
 # Create non-root user
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+RUN addgroup -g 1001 -S appuser && \
+    adduser -u 1001 -S appuser -G appuser
 
 # Install curl for health checks
-RUN apt-get update && \
-    apt-get install -y curl && \
-    rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache curl
 
 # Copy JAR from builder stage
 COPY --from=builder /app/target/redis-session-manager-2.0.0.jar app.jar
