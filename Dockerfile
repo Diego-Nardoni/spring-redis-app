@@ -12,6 +12,9 @@ RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
 # Build application
 RUN mvn clean package -DskipTests
 
+# Verify JAR exists and list target directory
+RUN ls -la target/
+
 # Run application
 EXPOSE 8080
 CMD ["java", "-jar", "target/spring-redis-poc-1.0.0.jar"]
