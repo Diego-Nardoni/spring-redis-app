@@ -1,7 +1,9 @@
-/home/modern-redis-app/src/main/java/com/modernapp/controller/SessionController.java
-/home/modern-redis-app/src/main/java/com/modernapp/dto/SessionResponse.java
-/home/modern-redis-app/src/main/java/com/modernapp/service/RedisHealthService.java
-/home/modern-redis-app/src/main/java/com/modernapp/model/SessionData.java
-/home/modern-redis-app/src/main/java/com/modernapp/service/SessionService.java
-/home/modern-redis-app/src/main/java/com/modernapp/config/RedisConfig.java
-/home/modern-redis-app/src/main/java/com/modernapp/ModernRedisApplication.java
+/tmp/spring-redis-poc/src/main/java/com/poc/controller/SessionApiController.java
+/tmp/spring-redis-poc/src/main/java/com/poc/model/ArchitectureStatus.java
+/tmp/spring-redis-poc/src/main/java/com/poc/controller/TestController.java
+/tmp/spring-redis-poc/src/main/java/com/poc/service/ArchitectureTestService.java
+/tmp/spring-redis-poc/src/main/java/com/poc/model/ComponentStatus.java
+/tmp/spring-redis-poc/src/main/java/com/poc/controller/DashboardController.java
+/tmp/spring-redis-poc/src/main/java/com/poc/model/SessionInfo.java
+/tmp/spring-redis-poc/src/main/java/com/poc/config/RedisConfig.java
+/tmp/spring-redis-poc/src/main/java/com/poc/Application.java
