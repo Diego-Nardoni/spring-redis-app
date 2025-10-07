@@ -2,16 +2,25 @@ spring:
   application:
     name: spring-redis-poc
   
+spring:
+  application:
+    name: spring-redis-poc
+  
   data:
     redis:
-      host: ${SPRING_REDIS_HOST:localhost}
+      # NOTA: Configuração dinâmica via Parameter Store
+      # Prioridade: Parameter Store > Environment Variables > Default
+      # Parameter Store: /poc/redis/endpoint e /poc/redis/port
+      host: ${SPRING_REDIS_HOST:poc-redis-01ndkd.serverless.use1.cache.amazonaws.com}
       port: ${SPRING_REDIS_PORT:6379}
       timeout: 2000ms
       lettuce:
         pool:
           max-active: 8
           max-idle: 8
-          min-idle: 0
+          min-idle: 2
+          max-wait: 2000ms
+        shutdown-timeout: 100ms
   
   session:
     store-type: redis
