@@ -7,6 +7,7 @@ com/poc/controller/SessionApiController.class
 com/poc/Application.class
 com/poc/config/RedisConfig.class
 com/poc/model/ComponentStatus$ComponentStatusBuilder.class
+com/poc/config/SecurityConfig.class
 com/poc/controller/DashboardController.class
 com/poc/model/ComponentStatus.class
 com/poc/model/SessionInfo$SessionInfoBuilder.class
