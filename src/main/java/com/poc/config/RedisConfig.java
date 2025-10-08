@@ -2,6 +2,7 @@ package com.poc.config;
 
 import com.poc.service.ParameterStoreService;
 import io.lettuce.core.ClientOptions;
+import io.lettuce.core.SslOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -22,45 +23,55 @@ public class RedisConfig {
     @Autowired
     private ParameterStoreService parameterStoreService;
 
-    // Fallback para variáveis de ambiente ou valores padrão
     @Value("${SPRING_REDIS_HOST:poc-redis-01ndkd.serverless.use1.cache.amazonaws.com}")
     private String fallbackRedisHost;
 
     @Value("${SPRING_REDIS_PORT:6379}")
     private int fallbackRedisPort;
 
+    @Value("${SPRING_REDIS_SSL:false}")
+    private String fallbackSslEnabled;
+
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
         System.out.println("=== RedisConfig: Initializing Redis Connection Factory ===");
         
-        // Tentar buscar do Parameter Store primeiro
         String redisHost = parameterStoreService.getParameter("/poc/redis/endpoint", fallbackRedisHost);
         String redisPortStr = parameterStoreService.getParameter("/poc/redis/port", String.valueOf(fallbackRedisPort));
+        String sslEnabledStr = parameterStoreService.getParameter("/poc/redis/ssl", fallbackSslEnabled);
         
-        int redisPort;
-        try {
-            redisPort = Integer.parseInt(redisPortStr);
-        } catch (NumberFormatException e) {
-            redisPort = fallbackRedisPort;
-        }
+        int redisPort = Integer.parseInt(redisPortStr);
+        boolean sslEnabled = Boolean.parseBoolean(sslEnabledStr);
         
-        System.out.println("=== RedisConfig: Using Redis Host: " + redisHost + " Port: " + redisPort + " ===");
+        System.out.println("=== RedisConfig: Host=" + redisHost + " Port=" + redisPort + " SSL=" + sslEnabled + " ===");
         
-        // Configuração otimizada para ElastiCache Serverless
-        LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
+        LettuceClientConfiguration.LettuceClientConfigurationBuilder clientConfigBuilder = LettuceClientConfiguration.builder()
             .commandTimeout(Duration.ofSeconds(30))
-            .shutdownTimeout(Duration.ofSeconds(5))
-            .clientOptions(ClientOptions.builder()
+            .shutdownTimeout(Duration.ofSeconds(5));
+        
+        if (sslEnabled) {
+            System.out.println("=== RedisConfig: Enabling SSL/TLS ===");
+            clientConfigBuilder.useSsl()
+                .and()
+                .clientOptions(ClientOptions.builder()
+                    .autoReconnect(true)
+                    .pingBeforeActivateConnection(true)
+                    .sslOptions(SslOptions.builder()
+                        .jdkSslProvider()
+                        .build())
+                    .build());
+        } else {
+            clientConfigBuilder.clientOptions(ClientOptions.builder()
                 .autoReconnect(true)
                 .pingBeforeActivateConnection(true)
-                .build())
-            .build();
+                .build());
+        }
         
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
         config.setHostName(redisHost);
         config.setPort(redisPort);
         
-        return new LettuceConnectionFactory(config, clientConfig);
+        return new LettuceConnectionFactory(config, clientConfigBuilder.build());
     }
 
     @Bean
@@ -68,11 +79,8 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         
-        // Use String serializer for keys
         template.setKeySerializer(new StringRedisSerializer());
         template.setHashKeySerializer(new StringRedisSerializer());
-        
-        // Use JSON serializer for values
         template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
         template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
         

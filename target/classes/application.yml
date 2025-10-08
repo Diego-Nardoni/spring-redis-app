@@ -8,15 +8,19 @@ spring:
       # Parameter Store: /poc/redis/endpoint e /poc/redis/port
       host: ${/poc/redis/endpoint:poc-redis-01ndkd.serverless.use1.cache.amazonaws.com}
       port: ${/poc/redis/port:6379}
-      timeout: 1000ms
-      connect-timeout: 1000ms
+      timeout: 30s
+      connect-timeout: 10s
       lettuce:
         pool:
           max-active: 8
           max-idle: 8
-          min-idle: 0
-          max-wait: 1000ms
-        shutdown-timeout: 100ms
+          min-idle: 2
+          max-wait: 5s
+        shutdown-timeout: 5s
+        cluster:
+          refresh:
+            adaptive: true
+            period: 30s
   session:
     store-type: redis
     redis:
