@@ -1,0 +1,12 @@
+/home/novo-proj/spring-redis-poc/src/main/java/com/poc/service/ArchitectureTestService.java
+/home/novo-proj/spring-redis-poc/src/main/java/com/poc/controller/SessionApiController.java
+/home/novo-proj/spring-redis-poc/src/main/java/com/poc/controller/TestController.java
+/home/novo-proj/spring-redis-poc/src/main/java/com/poc/model/SessionInfo.java
+/home/novo-proj/spring-redis-poc/src/main/java/com/poc/config/SecurityConfig.java
+/home/novo-proj/spring-redis-poc/src/main/java/com/poc/controller/ParameterStoreController.java
+/home/novo-proj/spring-redis-poc/src/main/java/com/poc/controller/DashboardController.java
+/home/novo-proj/spring-redis-poc/src/main/java/com/poc/service/ParameterStoreService.java
+/home/novo-proj/spring-redis-poc/src/main/java/com/poc/model/ComponentStatus.java
+/home/novo-proj/spring-redis-poc/src/main/java/com/poc/config/RedisConfig.java
+/home/novo-proj/spring-redis-poc/src/main/java/com/poc/model/ArchitectureStatus.java
+/home/novo-proj/spring-redis-poc/src/main/java/com/poc/Application.java
