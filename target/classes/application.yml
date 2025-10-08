@@ -8,13 +8,14 @@ spring:
       # Parameter Store: /poc/redis/endpoint e /poc/redis/port
       host: ${/poc/redis/endpoint:poc-redis-01ndkd.serverless.use1.cache.amazonaws.com}
       port: ${/poc/redis/port:6379}
-      timeout: 2000ms
+      timeout: 1000ms
+      connect-timeout: 1000ms
       lettuce:
         pool:
           max-active: 8
           max-idle: 8
-          min-idle: 2
-          max-wait: 2000ms
+          min-idle: 0
+          max-wait: 1000ms
         shutdown-timeout: 100ms
   session:
     store-type: redis
@@ -60,6 +61,7 @@ logging:
     com.poc: INFO
     org.springframework.session: DEBUG
     org.springframework.web: DEBUG
+    io.lettuce.core: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{traceId}] %logger{36} - %msg%n"
 

@@ -27,6 +27,7 @@ public class ParameterStoreService {
     }
     
     public String getParameter(String parameterName, String defaultValue) {
+        System.out.println("=== ParameterStoreService: Attempting to get parameter: " + parameterName + " ===");
         try {
             GetParameterRequest request = GetParameterRequest.builder()
                     .name(parameterName)
@@ -35,14 +36,17 @@ public class ParameterStoreService {
             GetParameterResponse response = ssmClient.getParameter(request);
             String value = response.parameter().value();
             
+            System.out.println("=== ParameterStoreService: Retrieved parameter " + parameterName + " = " + value + " ===");
             logger.info("Retrieved parameter {} from Parameter Store", parameterName);
             return value;
             
         } catch (ParameterNotFoundException e) {
+            System.out.println("=== ParameterStoreService: Parameter " + parameterName + " not found, using default: " + defaultValue + " ===");
             logger.warn("Parameter {} not found in Parameter Store, using default: {}", 
                        parameterName, defaultValue);
             return defaultValue;
         } catch (Exception e) {
+            System.out.println("=== ParameterStoreService: Error retrieving parameter " + parameterName + ": " + e.getMessage() + " ===");
             logger.error("Error retrieving parameter {} from Parameter Store: {}", 
                         parameterName, e.getMessage());
             return defaultValue;

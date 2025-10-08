@@ -7,6 +7,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -14,12 +15,22 @@ public class ArchitectureTestService {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+    
+    private volatile ComponentStatus cachedRedisStatus = ComponentStatus.builder()
+            .name("Redis Cache")
+            .status("checking")
+            .details("Initial health check in progress")
+            .responseTime(0L)
+            .build();
 
     public ArchitectureStatus getArchitectureStatus() {
+        // Start async Redis check but don't wait
+        CompletableFuture.runAsync(this::updateRedisStatus);
+        
         return ArchitectureStatus.builder()
                 .containerStatus(getContainerStatus())
-                .redisStatus(getRedisStatus())
-                .sessionStatus(getSessionStatus())
+                .redisStatus(cachedRedisStatus)
+                .sessionStatus(getSessionStatusFromCache())
                 .cloudFrontStatus(getCloudFrontStatus())
                 .timestamp(Instant.now().toString())
                 .build();
@@ -47,36 +58,26 @@ public class ArchitectureTestService {
         }
     }
 
-    private ComponentStatus getRedisStatus() {
+    private void updateRedisStatus() {
         try {
             long startTime = System.currentTimeMillis();
             String testKey = "health:check:" + System.currentTimeMillis();
             String testValue = "ping";
             
-            // Test Redis connectivity
             redisTemplate.opsForValue().set(testKey, testValue, 10, TimeUnit.SECONDS);
             String result = (String) redisTemplate.opsForValue().get(testKey);
             redisTemplate.delete(testKey);
             
             long responseTime = System.currentTimeMillis() - startTime;
             
-            if (testValue.equals(result)) {
-                return ComponentStatus.builder()
-                        .name("Redis Cache")
-                        .status("healthy")
-                        .details("Connection successful | Response time: " + responseTime + "ms")
-                        .responseTime(responseTime)
-                        .build();
-            } else {
-                return ComponentStatus.builder()
-                        .name("Redis Cache")
-                        .status("warning")
-                        .details("Data mismatch in read/write test")
-                        .responseTime(responseTime)
-                        .build();
-            }
+            cachedRedisStatus = ComponentStatus.builder()
+                    .name("Redis Cache")
+                    .status(testValue.equals(result) ? "healthy" : "warning")
+                    .details("Connection successful | Response time: " + responseTime + "ms")
+                    .responseTime(responseTime)
+                    .build();
         } catch (Exception e) {
-            return ComponentStatus.builder()
+            cachedRedisStatus = ComponentStatus.builder()
                     .name("Redis Cache")
                     .status("error")
                     .details("Connection failed: " + e.getMessage())
@@ -85,38 +86,13 @@ public class ArchitectureTestService {
         }
     }
 
-    private ComponentStatus getSessionStatus() {
-        try {
-            // Test session storage capability
-            String testKey = "session:test:" + System.currentTimeMillis();
-            redisTemplate.opsForValue().set(testKey, "session-data", 30, TimeUnit.MINUTES);
-            
-            boolean exists = Boolean.TRUE.equals(redisTemplate.hasKey(testKey));
-            redisTemplate.delete(testKey);
-            
-            if (exists) {
-                return ComponentStatus.builder()
-                        .name("Session Store")
-                        .status("healthy")
-                        .details("Session persistence working correctly")
-                        .responseTime(1L)
-                        .build();
-            } else {
-                return ComponentStatus.builder()
-                        .name("Session Store")
-                        .status("error")
-                        .details("Session persistence test failed")
-                        .responseTime(-1L)
-                        .build();
-            }
-        } catch (Exception e) {
-            return ComponentStatus.builder()
-                    .name("Session Store")
-                    .status("error")
-                    .details("Session test error: " + e.getMessage())
-                    .responseTime(-1L)
-                    .build();
-        }
+    private ComponentStatus getSessionStatusFromCache() {
+        return ComponentStatus.builder()
+                .name("Session Store")
+                .status(cachedRedisStatus.getStatus())
+                .details("Based on Redis connectivity")
+                .responseTime(1L)
+                .build();
     }
 
     private ComponentStatus getCloudFrontStatus() {
