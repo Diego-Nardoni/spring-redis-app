@@ -8,8 +8,8 @@ spring:
       # Parameter Store: /poc/redis/endpoint e /poc/redis/port
       host: ${/poc/redis/endpoint:poc-redis-01ndkd.serverless.use1.cache.amazonaws.com}
       port: ${/poc/redis/port:6379}
-      timeout: 30s
-      connect-timeout: 10s
+      timeout: 10s
+      connect-timeout: 5s
       lettuce:
         pool:
           max-active: 8

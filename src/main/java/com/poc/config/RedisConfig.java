@@ -46,24 +46,25 @@ public class RedisConfig {
         System.out.println("=== RedisConfig: Host=" + redisHost + " Port=" + redisPort + " SSL=" + sslEnabled + " ===");
         
         LettuceClientConfiguration.LettuceClientConfigurationBuilder clientConfigBuilder = LettuceClientConfiguration.builder()
-            .commandTimeout(Duration.ofSeconds(30))
-            .shutdownTimeout(Duration.ofSeconds(5));
+            .commandTimeout(Duration.ofSeconds(5))
+            .shutdownTimeout(Duration.ofSeconds(2));
         
         if (sslEnabled) {
-            System.out.println("=== RedisConfig: Enabling SSL/TLS ===");
+            System.out.println("=== RedisConfig: Enabling SSL/TLS for ElastiCache Serverless ===");
             clientConfigBuilder.useSsl()
                 .and()
                 .clientOptions(ClientOptions.builder()
                     .autoReconnect(true)
-                    .pingBeforeActivateConnection(true)
+                    .pingBeforeActivateConnection(false)
                     .sslOptions(SslOptions.builder()
                         .jdkSslProvider()
                         .build())
                     .build());
         } else {
+            System.out.println("=== RedisConfig: SSL disabled - using plain connection ===");
             clientConfigBuilder.clientOptions(ClientOptions.builder()
                 .autoReconnect(true)
-                .pingBeforeActivateConnection(true)
+                .pingBeforeActivateConnection(false)
                 .build());
         }
         

@@ -3,30 +3,23 @@ spring:
     name: spring-redis-poc
   data:
     redis:
-      # NOTA: Configuração dinâmica via Parameter Store
-      # Prioridade: Parameter Store > Environment Variables > Default
-      # Parameter Store: /poc/redis/endpoint e /poc/redis/port
-      host: ${/poc/redis/endpoint:poc-redis-01ndkd.serverless.use1.cache.amazonaws.com}
+      host: ${/poc/redis/endpoint}
       port: ${/poc/redis/port:6379}
       timeout: 10s
       connect-timeout: 5s
       lettuce:
         pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 2
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
           max-wait: 5s
         shutdown-timeout: 5s
-        cluster:
-          refresh:
-            adaptive: true
-            period: 30s
   session:
     store-type: redis
     redis:
-      namespace: "poc:session"
+      namespace: "poc:session:prod"
       flush-mode: on_save
-    timeout: 30m
+    timeout: 60m
   cloud:
     aws:
       parameterstore:
@@ -37,8 +30,7 @@ server:
   port: 8080
   servlet:
     session:
-      timeout: 30m
-  # Headers anti-cache globais
+      timeout: 60m
   forward-headers-strategy: framework
 
 management:
@@ -52,29 +44,27 @@ management:
         allowed-headers: "*"
   endpoint:
     health:
-      show-details: always
+      show-details: when-authorized
   metrics:
     export:
       cloudwatch:
         enabled: true
-        namespace: POC/SpringRedis
+        namespace: POC/SpringRedis/Production
         step: 1m
 
 logging:
   level:
     com.poc: INFO
-    org.springframework.session: DEBUG
-    org.springframework.web: DEBUG
-    io.lettuce.core: DEBUG
+    org.springframework.session: WARN
+    org.springframework.web: WARN
+    io.lettuce.core: WARN
+    root: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{traceId}] %logger{36} - %msg%n"
 
-# Configurações customizadas para POC
 poc:
   cache:
-    # Estratégias anti-cache habilitadas
     anti-cache-enabled: true
-    # Headers anti-cache padrão
     default-headers:
       - "Cache-Control: no-cache, no-store, must-revalidate"
       - "Pragma: no-cache"
