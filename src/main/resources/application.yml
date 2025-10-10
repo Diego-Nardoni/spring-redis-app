@@ -1,22 +1,12 @@
 spring:
   application:
     name: spring-redis-poc
-  config:
-    import: "aws-parameterstore:/poc/"
-  cloud:
-    aws:
-      region:
-        static: us-east-1
-      parameterstore:
-        enabled: true
-        prefix: /poc
-        fail-fast: false
   data:
     redis:
-      host: ${redis.endpoint:localhost}
-      port: ${redis.port:6379}
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
       ssl:
-        enabled: ${redis.ssl:false}
+        enabled: true
       timeout: 5s
       lettuce:
         pool:

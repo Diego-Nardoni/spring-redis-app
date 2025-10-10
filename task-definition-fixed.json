@@ -1,0 +1,37 @@
+{
+  "family": "poc-spring-redis-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::221082174220:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::221082174220:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "spring-redis-app",
+      "image": "221082174220.dkr.ecr.us-east-1.amazonaws.com/spring-redis-app:latest",
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "value": "production"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/poc-spring-redis-task",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
