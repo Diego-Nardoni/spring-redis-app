@@ -1,15 +1,15 @@
 {
-  "family": "spring-redis-poc",
+  "family": "poc-spring-redis-task",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
-  "cpu": "512",
-  "memory": "1024",
-  "executionRoleArn": "arn:aws:iam::221082174220:role/ecsTaskExecutionRole",
-  "taskRoleArn": "arn:aws:iam::221082174220:role/ecsTaskRole",
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ecsTaskRole",
   "containerDefinitions": [
     {
-      "name": "spring-redis-poc",
-      "image": "221082174220.dkr.ecr.us-east-1.amazonaws.com/spring-redis-poc:latest",
+      "name": "spring-redis-app",
+      "image": "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/spring-redis-app:latest",
       "portMappings": [
         {
           "containerPort": 8080,
@@ -20,20 +20,10 @@
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/ecs/spring-redis-poc",
-          "awslogs-region": "us-east-1",
+          "awslogs-group": "/ecs/poc-spring-redis-task",
+          "awslogs-region": "${AWS_REGION}",
           "awslogs-stream-prefix": "ecs"
         }
-      },
-      "healthCheck": {
-        "command": [
-          "CMD-SHELL",
-          "wget --no-verbose --tries=1 --spider http://localhost:8080/health-check || exit 1"
-        ],
-        "interval": 30,
-        "timeout": 10,
-        "retries": 3,
-        "startPeriod": 90
       },
       "environment": [
         {

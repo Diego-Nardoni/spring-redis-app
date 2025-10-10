@@ -1,23 +1,79 @@
 # 🚀 Spring Boot Redis POC
 
-Aplicação Spring Boot com integração Redis Serverless e AWS Parameter Store, deployada em ECS Fargate com arquitetura serverless completa.
+Aplicação Spring Boot com integração Redis e AWS Parameter Store, deployada em ECS Fargate com GitOps completo.
 
 ## 📋 Visão Geral
 
 Esta aplicação demonstra:
 - **Spring Boot 3.1.5** com Java 17
-- **Redis Serverless** para cache e sessões
+- **Redis** para cache e sessões de usuários
 - **AWS Parameter Store** para configuração dinâmica
 - **ECS Fargate** para deployment containerizado
-- **CloudFront + WAF** para distribuição global segura
+- **GitOps** com GitHub Actions para deploy automático
 
 ## 🏗️ Arquitetura
 
 ```
-Internet → CloudFront → ALB → ECS Fargate → Redis Serverless
-                                    ↓
-                            Parameter Store
+Internet → ALB → ECS Fargate → Redis
+                      ↓
+              Parameter Store
 ```
+
+## ✅ Configuração Dinâmica
+
+### Parameter Store
+```
+/poc/redis/endpoint: seu-redis-endpoint.amazonaws.com
+/poc/redis/port: 6379
+/poc/redis/ssl: false
+```
+
+### GitHub Secrets
+```
+AWS_ROLE_ARN: arn:aws:iam::SUA_CONTA:role/GitHubActionsRole
+AWS_REGION: sua-regiao (opcional)
+```
+
+## 🚀 Deploy GitOps
+
+```bash
+git add .
+git commit -m "deploy: update application"
+git push origin main
+```
+
+**GitHub Actions executará automaticamente:**
+- Build da aplicação
+- Push para ECR com tag dinâmica
+- Deploy no ECS com zero hardcoding
+- Aplicação conecta no Redis via Parameter Store
+
+## 🔧 Funcionalidades
+
+- **Sessões Redis**: Armazenamento de sessões de usuários
+- **Parameter Store**: Configuração dinâmica sem hardcoding
+- **Health Checks**: Monitoramento da aplicação
+- **Multi-Account**: Funciona em qualquer conta AWS
+
+## 📦 Estrutura
+
+```
+├── src/main/resources/
+│   └── application-production.yml    # Configuração Parameter Store
+├── task-definition.json              # Template dinâmico ECS
+├── .github/workflows/deploy.yml      # GitOps workflow
+├── Dockerfile                        # Container build
+└── GITOPS-SETUP.md                  # Documentação deploy
+```
+
+## 🎯 Zero Hardcoding
+
+- ✅ Account ID: Detectado automaticamente
+- ✅ Region: Configurável via secrets
+- ✅ Redis endpoint: Via Parameter Store
+- ✅ ARNs: Construídos dinamicamente
+
+**Funciona em qualquer conta AWS!** 🎉
 
 ### Componentes AWS
 - **ECS Fargate**: Execução da aplicação
@@ -32,7 +88,6 @@ Internet → CloudFront → ALB → ECS Fargate → Redis Serverless
 
 ### Parameter Store
 ```yaml
-/poc/redis/endpoint: poc-redis-01ndkd.serverless.use1.cache.amazonaws.com
 /poc/redis/port: 6379
 /poc/redis/ssl: true
 ```
@@ -76,8 +131,6 @@ mvn clean package -DskipTests
 
 # 2. Docker build & push
 docker build -t spring-redis-poc .
-docker tag spring-redis-poc:latest 221082174220.dkr.ecr.us-east-1.amazonaws.com/spring-redis-poc:latest
-docker push 221082174220.dkr.ecr.us-east-1.amazonaws.com/spring-redis-poc:latest
 
 # 3. Deploy ECS
 ./deploy.sh
@@ -212,8 +265,6 @@ jobs:
 ### Variáveis Necessárias
 ```yaml
 GitHub Secrets:
-  AWS_ROLE_ARN: arn:aws:iam::221082174220:role/GitHubActionsECRDeployRole
-  ECR_REGISTRY: 221082174220.dkr.ecr.us-east-1.amazonaws.com
 
 GitHub Variables:
   AWS_REGION: us-east-1
