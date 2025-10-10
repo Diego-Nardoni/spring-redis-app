@@ -1,45 +1,16 @@
 spring:
-  application:
-    name: spring-redis-poc
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      ssl:
-        enabled: true
-      timeout: 5s
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 2
-          max-wait: 3s
-        shutdown-timeout: 3s
-  session:
-    store-type: redis
-    redis:
-      namespace: spring:session
-      flush-mode: on_save
-      save-mode: on_set_attribute
-    timeout: 30m
-
-server:
-  port: 8080
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-  endpoint:
-    health:
-      show-details: always
-  health:
-    redis:
-      enabled: false
-
-logging:
-  level:
-    com.poc: INFO
-    org.springframework.data.redis: WARN
-    io.lettuce.core: WARN
+  redis:
+    host: ${/poc/redis/endpoint}
+    port: ${/poc/redis/port}
+    ssl: ${/poc/redis/ssl}
+    timeout: ${/poc/redis/timeout:2000}ms
+    jedis:
+      pool:
+        max-active: ${/poc/redis/pool/max-active:8}
+        max-idle: ${/poc/redis/pool/max-active:8}
+        min-idle: ${/poc/redis/pool/min-idle:4}
+        max-wait: 1000ms
+        test-on-borrow: true
+        test-on-return: false
+        test-while-idle: true
+        time-between-eviction-runs: 30000ms
