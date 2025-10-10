@@ -22,26 +22,13 @@ public class RedisConfig {
     @Value("${/poc/redis/port}")
     private int redisPort;
 
-    @Value("${/poc/redis/ssl:false}")
-    private boolean useSsl;
-
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        try {
-            log.info("Configuring Redis connection to {}:{} (SSL: {})", redisHost, redisPort, useSsl);
-            
-            RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
-            config.setHostName(redisHost);
-            config.setPort(redisPort);
-            
-            JedisConnectionFactory factory = new JedisConnectionFactory(config);
-            factory.setUseSsl(useSsl);
-            
-            return factory;
-        } catch (Exception e) {
-            log.error("Failed to configure Redis connection", e);
-            throw e;
-        }
+        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
+        config.setHostName(redisHost);
+        config.setPort(redisPort);
+        
+        return new JedisConnectionFactory(config);
     }
 
     @Bean
@@ -53,15 +40,6 @@ public class RedisConfig {
         template.setHashKeySerializer(new StringRedisSerializer());
         template.setHashValueSerializer(new StringRedisSerializer());
         template.afterPropertiesSet();
-        
-        try {
-            // Test connection
-            template.getConnectionFactory().getConnection().ping();
-            log.info("Redis connection test successful");
-        } catch (Exception e) {
-            log.error("Redis connection test failed", e);
-        }
-        
         return template;
     }
 }
