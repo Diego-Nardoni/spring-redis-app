@@ -2,14 +2,15 @@ com/poc/service/ArchitectureTestService.class
 com/poc/controller/TestController.class
 com/poc/model/ArchitectureStatus$ArchitectureStatusBuilder.class
 com/poc/model/ArchitectureStatus.class
-com/poc/controller/ParameterStoreController.class
+com/poc/controller/HealthController.class
 com/poc/controller/SessionApiController.class
 com/poc/Application.class
+com/poc/config/HealthConfig.class
 com/poc/config/RedisConfig.class
 com/poc/model/ComponentStatus$ComponentStatusBuilder.class
 com/poc/config/SecurityConfig.class
 com/poc/controller/DashboardController.class
 com/poc/model/ComponentStatus.class
+com/poc/controller/RedisTestController.class
 com/poc/model/SessionInfo$SessionInfoBuilder.class
 com/poc/model/SessionInfo.class
-com/poc/service/ParameterStoreService.class

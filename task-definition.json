@@ -1,0 +1,46 @@
+{
+  "family": "spring-redis-poc",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::221082174220:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::221082174220:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "spring-redis-poc",
+      "image": "221082174220.dkr.ecr.us-east-1.amazonaws.com/spring-redis-poc:latest",
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/spring-redis-poc",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:8080/health-check || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 90
+      },
+      "environment": [
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "value": "production"
+        }
+      ]
+    }
+  ]
+}

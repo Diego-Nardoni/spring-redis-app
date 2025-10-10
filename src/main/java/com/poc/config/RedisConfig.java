@@ -1,9 +1,8 @@
 package com.poc.config;
 
-import com.poc.service.ParameterStoreService;
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.SslOptions;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,62 +16,49 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
 
+@Slf4j
 @Configuration
 public class RedisConfig {
 
-    @Autowired
-    private ParameterStoreService parameterStoreService;
+    @Value("${spring.data.redis.host}")
+    private String redisHost;
 
-    @Value("${SPRING_REDIS_HOST:poc-redis-01ndkd.serverless.use1.cache.amazonaws.com}")
-    private String fallbackRedisHost;
-
-    @Value("${SPRING_REDIS_PORT:6379}")
-    private int fallbackRedisPort;
-
-    @Value("${SPRING_REDIS_SSL:false}")
-    private String fallbackSslEnabled;
+    @Value("${spring.data.redis.port}")
+    private int redisPort;
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        System.out.println("=== RedisConfig: Initializing Redis Connection Factory ===");
-        
-        String redisHost = parameterStoreService.getParameter("/poc/redis/endpoint", fallbackRedisHost);
-        String redisPortStr = parameterStoreService.getParameter("/poc/redis/port", String.valueOf(fallbackRedisPort));
-        String sslEnabledStr = parameterStoreService.getParameter("/poc/redis/ssl", fallbackSslEnabled);
-        
-        int redisPort = Integer.parseInt(redisPortStr);
-        boolean sslEnabled = Boolean.parseBoolean(sslEnabledStr);
-        
-        System.out.println("=== RedisConfig: Host=" + redisHost + " Port=" + redisPort + " SSL=" + sslEnabled + " ===");
-        
-        LettuceClientConfiguration.LettuceClientConfigurationBuilder clientConfigBuilder = LettuceClientConfiguration.builder()
-            .commandTimeout(Duration.ofSeconds(5))
-            .shutdownTimeout(Duration.ofSeconds(2));
-        
-        if (sslEnabled) {
-            System.out.println("=== RedisConfig: Enabling SSL/TLS for ElastiCache Serverless ===");
-            clientConfigBuilder.useSsl()
-                .and()
-                .clientOptions(ClientOptions.builder()
-                    .autoReconnect(true)
-                    .pingBeforeActivateConnection(false)
-                    .sslOptions(SslOptions.builder()
-                        .jdkSslProvider()
-                        .build())
-                    .build());
-        } else {
-            System.out.println("=== RedisConfig: SSL disabled - using plain connection ===");
-            clientConfigBuilder.clientOptions(ClientOptions.builder()
-                .autoReconnect(true)
-                .pingBeforeActivateConnection(false)
-                .build());
-        }
+        log.info("Configuring Redis connection - Host: {}, Port: {}", redisHost, redisPort);
         
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
         config.setHostName(redisHost);
         config.setPort(redisPort);
         
-        return new LettuceConnectionFactory(config, clientConfigBuilder.build());
+        // Configuração SSL otimizada para ElastiCache Serverless
+        SslOptions sslOptions = SslOptions.builder()
+            .jdkSslProvider()
+            .build();
+        
+        ClientOptions clientOptions = ClientOptions.builder()
+            .autoReconnect(true)
+            .sslOptions(sslOptions)
+            .disconnectedBehavior(ClientOptions.DisconnectedBehavior.REJECT_COMMANDS)
+            .build();
+        
+        LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
+            .useSsl()
+            .and()
+            .clientOptions(clientOptions)
+            .commandTimeout(Duration.ofSeconds(5))
+            .shutdownTimeout(Duration.ofSeconds(3))
+            .build();
+        
+        LettuceConnectionFactory factory = new LettuceConnectionFactory(config, clientConfig);
+        factory.setValidateConnection(false);
+        factory.setShareNativeConnection(false);
+        
+        log.info("Redis connection factory configured successfully");
+        return factory;
     }
 
     @Bean
@@ -80,12 +66,19 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setHashKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        // Serializers otimizados
+        StringRedisSerializer stringSerializer = new StringRedisSerializer();
+        GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer();
         
+        template.setKeySerializer(stringSerializer);
+        template.setHashKeySerializer(stringSerializer);
+        template.setValueSerializer(jsonSerializer);
+        template.setHashValueSerializer(jsonSerializer);
+        template.setDefaultSerializer(jsonSerializer);
+        
+        template.setEnableTransactionSupport(false);
         template.afterPropertiesSet();
+        
         return template;
     }
 }
