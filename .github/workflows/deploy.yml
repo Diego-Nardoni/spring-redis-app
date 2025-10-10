@@ -3,81 +3,71 @@ name: Deploy to ECS
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: {}
 
-permissions:
-  id-token: write
-  contents: read
+env:
+  ECR_REPOSITORY: spring-redis-app
+  ECS_SERVICE: poc-spring-redis-service
+  ECS_CLUSTER: poc-cluster
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    env:
-      AWS_REGION: ${{ vars.AWS_REGION }}
-      AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
-      ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
-      ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
-      ECS_SERVICE: ${{ vars.ECS_SERVICE }}
-      TASK_FAMILY: poc-spring-redis-task
-      IMAGE_TAG: ${{ github.sha }}
-      IMAGE_TAG_LATEST: latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GitHubActionsECRDeployRole
-          aws-region: ${{ env.AWS_REGION }}
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+    - name: Get AWS Account ID and Region
+      id: aws-info
+      run: |
+        echo "account_id=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_OUTPUT
+        echo "region=$(aws configure get region)" >> $GITHUB_OUTPUT
 
-      - name: Build, tag and push Docker image
-        run: |
-          ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
-          IMAGE=$ECR_REGISTRY/${{ env.ECR_REPOSITORY }}
-          docker build --no-cache -t $IMAGE:${{ env.IMAGE_TAG }} .
-          docker tag $IMAGE:${{ env.IMAGE_TAG }} $IMAGE:${{ env.IMAGE_TAG_LATEST }}
-          docker push $IMAGE:${{ env.IMAGE_TAG }}
-          docker push $IMAGE:${{ env.IMAGE_TAG_LATEST }}
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Export current ECS task definition
-        run: |
-          aws ecs describe-task-definition --task-definition "${{ env.TASK_FAMILY }}" \
-            --query 'taskDefinition | {
-              family: family,
-              networkMode: networkMode,
-              requiresCompatibilities: requiresCompatibilities,
-              cpu: cpu,
-              memory: memory,
-              executionRoleArn: executionRoleArn,
-              containerDefinitions: [{
-                name: containerDefinitions[0].name,
-                image: containerDefinitions[0].image,
-                essential: containerDefinitions[0].essential,
-                portMappings: containerDefinitions[0].portMappings,
-                environment: containerDefinitions[0].environment,
-                logConfiguration: containerDefinitions[0].logConfiguration
-              }]
-            }' > ecs-task-def.json
+    - name: Build and push image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-      - name: Render task definition with new image
-        id: render
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: ecs-task-def.json
-          container-name: spring-redis-app
-          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+    - name: Prepare dynamic task definition
+      env:
+        AWS_ACCOUNT_ID: ${{ steps.aws-info.outputs.account_id }}
+        AWS_REGION: ${{ steps.aws-info.outputs.region }}
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Replace placeholders with actual values
+        envsubst < task-definition.json > task-definition-resolved.json
 
-      - name: Deploy to Amazon ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.render.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
+        # Update image tag
+        sed -i "s|:latest|:${IMAGE_TAG}|g" task-definition-resolved.json
+
+    - name: Update task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: task-definition-resolved.json
+        container-name: spring-redis-app
+        image: ${{ steps.login-ecr.outputs.registry }}/spring-redis-app:${{ github.sha }}
+
+    - name: Deploy to ECS
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        service: ${{ env.ECS_SERVICE }}
+        cluster: ${{ env.ECS_CLUSTER }}
+        wait-for-service-stability: true
