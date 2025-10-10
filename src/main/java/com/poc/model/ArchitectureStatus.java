@@ -1,30 +1,61 @@
 package com.poc.model;
 
-import lombok.Builder;
-import lombok.Data;
+import java.util.List;
 
-@Data
-@Builder
 public class ArchitectureStatus {
-    private ComponentStatus containerStatus;
-    private ComponentStatus redisStatus;
-    private ComponentStatus sessionStatus;
-    private ComponentStatus cloudFrontStatus;
-    private String timestamp;
-    
-    public boolean isAllHealthy() {
-        return "healthy".equals(containerStatus.getStatus()) &&
-               "healthy".equals(redisStatus.getStatus()) &&
-               "healthy".equals(sessionStatus.getStatus()) &&
-               "healthy".equals(cloudFrontStatus.getStatus());
+    private String overallStatus;
+    private List<ComponentStatus> components;
+
+    public ArchitectureStatus() {}
+
+    public ArchitectureStatus(String overallStatus, List<ComponentStatus> components) {
+        this.overallStatus = overallStatus;
+        this.components = components;
     }
+
+    public String calculateOverallStatus(ComponentStatus containerStatus, ComponentStatus redisStatus, 
+                                       ComponentStatus sessionStatus, ComponentStatus cloudFrontStatus) {
+        if ("HEALTHY".equals(containerStatus.getStatus()) && 
+            "HEALTHY".equals(redisStatus.getStatus()) && 
+            "HEALTHY".equals(sessionStatus.getStatus()) && 
+            "HEALTHY".equals(cloudFrontStatus.getStatus())) {
+            return "HEALTHY";
+        } else if ("UNHEALTHY".equals(containerStatus.getStatus()) || 
+                   "UNHEALTHY".equals(redisStatus.getStatus()) || 
+                   "UNHEALTHY".equals(sessionStatus.getStatus()) || 
+                   "UNHEALTHY".equals(cloudFrontStatus.getStatus())) {
+            return "UNHEALTHY";
+        } else {
+            return "DEGRADED";
+        }
+    }
+
+    public static ArchitectureStatusBuilder builder() {
+        return new ArchitectureStatusBuilder();
+    }
+
+    public String getOverallStatus() { return overallStatus; }
+    public void setOverallStatus(String overallStatus) { this.overallStatus = overallStatus; }
     
-    public int getHealthyCount() {
-        int count = 0;
-        if ("healthy".equals(containerStatus.getStatus())) count++;
-        if ("healthy".equals(redisStatus.getStatus())) count++;
-        if ("healthy".equals(sessionStatus.getStatus())) count++;
-        if ("healthy".equals(cloudFrontStatus.getStatus())) count++;
-        return count;
+    public List<ComponentStatus> getComponents() { return components; }
+    public void setComponents(List<ComponentStatus> components) { this.components = components; }
+
+    public static class ArchitectureStatusBuilder {
+        private String overallStatus;
+        private List<ComponentStatus> components;
+
+        public ArchitectureStatusBuilder overallStatus(String overallStatus) { 
+            this.overallStatus = overallStatus; 
+            return this; 
+        }
+        
+        public ArchitectureStatusBuilder components(List<ComponentStatus> components) { 
+            this.components = components; 
+            return this; 
+        }
+        
+        public ArchitectureStatus build() {
+            return new ArchitectureStatus(overallStatus, components);
+        }
     }
 }

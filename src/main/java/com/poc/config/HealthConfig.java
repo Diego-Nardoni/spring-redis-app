@@ -1,46 +1,52 @@
 package com.poc.config;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.actuator.health.Health;
+import org.springframework.boot.actuator.health.HealthIndicator;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.Map;
-
-@Slf4j
-@RestController
+@Configuration
 public class HealthConfig {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private static final Logger log = LoggerFactory.getLogger(HealthConfig.class);
 
-    public HealthConfig(RedisTemplate<String, Object> redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    @Bean
+    public HealthIndicator redisHealthIndicator(RedisTemplate<String, Object> redisTemplate) {
+        return () -> {
+            try {
+                // Test Redis connection
+                redisTemplate.getConnectionFactory().getConnection().ping();
+                return Health.up()
+                    .withDetail("redis", "Connection successful")
+                    .build();
+            } catch (Exception e) {
+                return Health.down()
+                    .withDetail("redis", "Connection failed")
+                    .withDetail("error", e.getMessage())
+                    .build();
+            }
+        };
     }
 
-    @GetMapping("/health-check")
-    public ResponseEntity<Map<String, Object>> healthCheck() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "UP");
-        response.put("timestamp", System.currentTimeMillis());
-        response.put("service", "spring-redis-poc");
-        
-        // Teste Redis opcional - não falha o health check se Redis estiver indisponível
-        try {
-            redisTemplate.opsForValue().set("health:ping", "pong");
-            String result = (String) redisTemplate.opsForValue().get("health:ping");
-            
-            if ("pong".equals(result)) {
-                response.put("redis", "Connected");
-            } else {
-                response.put("redis", "Connection test failed");
+    @Bean
+    public HealthIndicator customHealthIndicator() {
+        return () -> {
+            try {
+                // Add custom health checks here
+                return Health.up()
+                    .withDetail("application", "Running")
+                    .withDetail("timestamp", System.currentTimeMillis())
+                    .build();
+            } catch (Exception e) {
+                log.error("Custom health check failed", e);
+                return Health.down()
+                    .withDetail("application", "Error")
+                    .withDetail("error", e.getMessage())
+                    .build();
             }
-        } catch (Exception e) {
-            log.warn("Redis health check failed, but service is still UP: {}", e.getMessage());
-            response.put("redis", "Unavailable - " + e.getMessage());
-        }
-        
-        return ResponseEntity.ok(response);
+        };
     }
 }
