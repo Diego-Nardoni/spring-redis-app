@@ -5,6 +5,7 @@ public class ComponentStatus {
     private String status;
     private String message;
     private String details;
+    private long responseTime;
 
     public ComponentStatus() {}
 
@@ -13,6 +14,7 @@ public class ComponentStatus {
         this.status = status;
         this.message = message;
         this.details = details;
+        this.responseTime = 0;
     }
 
     public static ComponentStatusBuilder builder() {
@@ -30,20 +32,27 @@ public class ComponentStatus {
     
     public String getDetails() { return details; }
     public void setDetails(String details) { this.details = details; }
+    
+    public long getResponseTime() { return responseTime; }
+    public void setResponseTime(long responseTime) { this.responseTime = responseTime; }
 
     public static class ComponentStatusBuilder {
         private String name;
         private String status;
         private String message;
         private String details;
+        private long responseTime;
 
         public ComponentStatusBuilder name(String name) { this.name = name; return this; }
         public ComponentStatusBuilder status(String status) { this.status = status; return this; }
         public ComponentStatusBuilder message(String message) { this.message = message; return this; }
         public ComponentStatusBuilder details(String details) { this.details = details; return this; }
+        public ComponentStatusBuilder responseTime(long responseTime) { this.responseTime = responseTime; return this; }
         
         public ComponentStatus build() {
-            return new ComponentStatus(name, status, message, details);
+            ComponentStatus cs = new ComponentStatus(name, status, message, details);
+            cs.setResponseTime(responseTime);
+            return cs;
         }
     }
 }

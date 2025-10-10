@@ -5,8 +5,6 @@ spring:
     import: "aws-parameterstore:/poc/"
   cloud:
     aws:
-      region:
-        static: us-east-1
       parameterstore:
         enabled: true
         prefix: /poc

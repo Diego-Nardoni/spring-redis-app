@@ -43,6 +43,7 @@ public class ArchitectureStatus {
     public static class ArchitectureStatusBuilder {
         private String overallStatus;
         private List<ComponentStatus> components;
+        private ComponentStatus containerStatus;
 
         public ArchitectureStatusBuilder overallStatus(String overallStatus) { 
             this.overallStatus = overallStatus; 
@@ -51,6 +52,27 @@ public class ArchitectureStatus {
         
         public ArchitectureStatusBuilder components(List<ComponentStatus> components) { 
             this.components = components; 
+            return this; 
+        }
+        
+        public ArchitectureStatusBuilder containerStatus(ComponentStatus containerStatus) { 
+            this.containerStatus = containerStatus; 
+            return this; 
+        }
+        
+        public ArchitectureStatusBuilder redisStatus(ComponentStatus redisStatus) { 
+            return this; 
+        }
+        
+        public ArchitectureStatusBuilder sessionStatus(ComponentStatus sessionStatus) { 
+            return this; 
+        }
+        
+        public ArchitectureStatusBuilder cloudFrontStatus(ComponentStatus cloudFrontStatus) { 
+            return this; 
+        }
+        
+        public ArchitectureStatusBuilder timestamp(String timestamp) { 
             return this; 
         }
         

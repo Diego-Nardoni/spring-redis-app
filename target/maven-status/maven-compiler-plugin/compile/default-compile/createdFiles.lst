@@ -5,7 +5,6 @@ com/poc/model/ArchitectureStatus.class
 com/poc/controller/HealthController.class
 com/poc/controller/SessionApiController.class
 com/poc/Application.class
-com/poc/config/HealthConfig.class
 com/poc/config/RedisConfig.class
 com/poc/model/ComponentStatus$ComponentStatusBuilder.class
 com/poc/config/SecurityConfig.class
