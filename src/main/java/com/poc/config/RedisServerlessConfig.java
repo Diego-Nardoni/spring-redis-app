@@ -27,13 +27,13 @@ public class RedisServerlessConfig {
 
     private static final Logger log = LoggerFactory.getLogger(RedisServerlessConfig.class);
 
-    @Value("${REDIS_ENDPOINT:${aws.parameterstore:/poc/redis/endpoint}}")
+    @Value("${spring.data.redis.host:localhost}")
     private String redisHost;
 
-    @Value("${REDIS_PORT:${spring.redis.port:6379}}")
+    @Value("${spring.data.redis.port:6379}")
     private int redisPort;
 
-    @Value("${REDIS_SSL:${spring.redis.ssl:true}}")
+    @Value("${spring.data.redis.ssl.enabled:true}")
     private boolean useSsl;
 
     @Bean
