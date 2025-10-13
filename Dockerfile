@@ -3,10 +3,13 @@ FROM maven:3.9.5-eclipse-temurin-17 AS builder
 
 WORKDIR /app
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
 
+# Force Linux platform for dependencies
+ENV MAVEN_OPTS="-Dos.detected.classifier=linux-x86_64"
+
+# Skip the go-offline step and build directly
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -Dos.detected.classifier=linux-x86_64
 
 # Runtime stage
 FROM eclipse-temurin:17-jre-alpine

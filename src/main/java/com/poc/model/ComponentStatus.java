@@ -35,6 +35,24 @@ public class ComponentStatus {
     
     public long getResponseTime() { return responseTime; }
     public void setResponseTime(long responseTime) { this.responseTime = responseTime; }
+    
+    public String getStatusColor() {
+        switch (status) {
+            case "healthy": return "success";
+            case "warning": return "warning";
+            case "error": return "danger";
+            default: return "secondary";
+        }
+    }
+    
+    public String getStatusIcon() {
+        switch (status) {
+            case "healthy": return "✅";
+            case "warning": return "⚠️";
+            case "error": return "❌";
+            default: return "❓";
+        }
+    }
 
     public static class ComponentStatusBuilder {
         private String name;

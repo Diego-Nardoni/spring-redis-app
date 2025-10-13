@@ -1,25 +1,27 @@
 package com.poc.controller;
 
+import com.poc.service.ServerlessCacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/redis")
 public class RedisTestController {
 
     private static final Logger log = LoggerFactory.getLogger(RedisTestController.class);
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final ServerlessCacheService cacheService;
 
-    public RedisTestController(RedisTemplate<String, Object> redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    public RedisTestController(ServerlessCacheService cacheService) {
+        this.cacheService = cacheService;
     }
 
     @GetMapping("/test")
@@ -27,31 +29,45 @@ public class RedisTestController {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            log.info("Testing Redis connection...");
+            log.info("Testing Redis Serverless connection...");
             
             // Teste simples de set/get
-            String testKey = "test:connection:" + System.currentTimeMillis();
-            String testValue = "Redis TLS connection working!";
+            String testKey = "test:serverless:" + System.currentTimeMillis();
+            String testValue = "Redis Serverless connection working!";
             
-            redisTemplate.opsForValue().set(testKey, testValue);
-            String retrievedValue = (String) redisTemplate.opsForValue().get(testKey);
+            cacheService.put(testKey, testValue, Duration.ofMinutes(5));
+            Optional<String> retrievedValue = cacheService.get(testKey, String.class);
             
             response.put("status", "SUCCESS");
-            response.put("message", "Redis connection working");
+            response.put("message", "Redis Serverless connection working");
             response.put("testKey", testKey);
             response.put("testValue", testValue);
-            response.put("retrievedValue", retrievedValue);
-            response.put("match", testValue.equals(retrievedValue));
+            response.put("retrievedValue", retrievedValue.orElse(null));
+            response.put("match", retrievedValue.map(v -> v.equals(testValue)).orElse(false));
+            response.put("cacheType", "serverless");
             
-            log.info("Redis test successful: {}", response);
+            log.info("Redis Serverless test successful: {}", response);
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            log.error("Redis test failed", e);
+            log.error("Redis Serverless test failed", e);
             response.put("status", "ERROR");
-            response.put("message", "Redis connection failed: " + e.getMessage());
+            response.put("message", "Redis Serverless connection failed: " + e.getMessage());
             response.put("error", e.getClass().getSimpleName());
+            response.put("cacheType", "serverless");
             return ResponseEntity.status(500).body(response);
         }
+    }
+
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, Object>> redisHealth() {
+        Map<String, Object> response = new HashMap<>();
+        
+        boolean healthy = cacheService.isHealthy();
+        response.put("status", healthy ? "UP" : "DOWN");
+        response.put("type", "redis-serverless");
+        response.put("healthy", healthy);
+        
+        return ResponseEntity.ok(response);
     }
 }

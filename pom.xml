@@ -20,6 +20,7 @@
     <properties>
         <java.version>17</java.version>
         <aws.version>2.20.162</aws.version>
+        <os.detected.classifier>linux-x86_64</os.detected.classifier>
     </properties>
 
     <dependencyManagement>
@@ -95,10 +96,41 @@
             <artifactId>ssm</artifactId>
         </dependency>
         
-        <!-- Jedis for Redis connection pooling -->
+        <!-- Lettuce for Redis connection pooling (better for serverless) -->
         <dependency>
-            <groupId>redis.clients</groupId>
-            <artifactId>jedis</artifactId>
+            <groupId>io.lettuce</groupId>
+            <artifactId>lettuce-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-tcnative</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+        <!-- Force Linux version of netty-tcnative -->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-tcnative-boringssl-static</artifactId>
+            <classifier>linux-x86_64</classifier>
+        </dependency>
+        
+        <!-- Commons Pool2 for connection pooling -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-pool2</artifactId>
+        </dependency>
+        
+        <!-- AWS CloudWatch for monitoring -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>cloudwatch</artifactId>
+        </dependency>
+        
+        <!-- Micrometer for metrics -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-cloudwatch2</artifactId>
         </dependency>
     </dependencies>
 

@@ -11,7 +11,7 @@ import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-@Configuration
+// @Configuration - DISABLED: Using RedisServerlessConfig instead
 public class RedisConfig {
 
     private static final Logger log = LoggerFactory.getLogger(RedisConfig.class);
@@ -22,7 +22,7 @@ public class RedisConfig {
     @Value("${/poc/redis/port}")
     private int redisPort;
 
-    @Bean
+    // @Bean - DISABLED
     public RedisConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
         config.setHostName(redisHost);
@@ -31,7 +31,7 @@ public class RedisConfig {
         return new JedisConnectionFactory(config);
     }
 
-    @Bean
+    // @Bean - DISABLED
     public RedisTemplate<String, Object> redisTemplate() {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(redisConnectionFactory());
