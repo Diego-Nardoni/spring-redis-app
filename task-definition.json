@@ -9,7 +9,7 @@
   "containerDefinitions": [
     {
       "name": "spring-redis-app",
-      "image": "221082174220.dkr.ecr.us-east-1.amazonaws.com/spring-redis-app:fixed3",
+      "image": "221082174220.dkr.ecr.us-east-1.amazonaws.com/spring-redis-app:latest",
       "cpu": 0,
       "portMappings": [
         {
@@ -27,6 +27,18 @@
         {
           "name": "SPRING_PROFILES_ACTIVE",
           "value": "production"
+        },
+        {
+          "name": "_X_AMZN_TRACE_ID",
+          "value": "Root=1-5e1b4151-5ac6c58f5b5daa3a7e1b4151"
+        },
+        {
+          "name": "AWS_XRAY_TRACING_NAME",
+          "value": "poc-spring-redis-app"
+        },
+        {
+          "name": "AWS_XRAY_DAEMON_ADDRESS",
+          "value": "127.0.0.1:2000"
         }
       ],
       "logConfiguration": {
@@ -35,6 +47,43 @@
           "awslogs-group": "/ecs/poc-spring-redis-task",
           "awslogs-region": "us-east-1",
           "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health/readiness || exit 1"
+        ],
+        "interval": 15,
+        "timeout": 5,
+        "retries": 2,
+        "startPeriod": 60
+      },
+      "dependsOn": [
+        {
+          "containerName": "xray-daemon",
+          "condition": "START"
+        }
+      ]
+    },
+    {
+      "name": "xray-daemon",
+      "image": "public.ecr.aws/xray/aws-xray-daemon:latest",
+      "cpu": 32,
+      "memoryReservation": 256,
+      "portMappings": [
+        {
+          "containerPort": 2000,
+          "protocol": "udp"
+        }
+      ],
+      "essential": true,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/poc-spring-redis-task",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "xray"
         }
       }
     }
