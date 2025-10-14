@@ -22,6 +22,13 @@ public class SessionApiController {
     public SessionInfo testSession(HttpSession session) {
         String sessionId = session.getId();
         
+        // Get or generate userId
+        String userId = (String) session.getAttribute("userId");
+        if (userId == null) {
+            userId = generateUserId(sessionId);
+            session.setAttribute("userId", userId);
+        }
+        
         // Increment counter
         Integer counter = (Integer) session.getAttribute("counter");
         if (counter == null) {
@@ -36,6 +43,7 @@ public class SessionApiController {
         
         return SessionInfo.builder()
                 .sessionId(sessionId)
+                .userId(userId)
                 .counter(counter)
                 .isNew(session.isNew())
                 .creationTime(session.getCreationTime())
@@ -130,5 +138,10 @@ public class SessionApiController {
         } catch (Exception e) {
             return "unknown-container";
         }
+    }
+
+    private String generateUserId(String sessionId) {
+        // Generate deterministic userId based on sessionId for consistency
+        return "user-" + sessionId.substring(0, 8).toLowerCase();
     }
 }
