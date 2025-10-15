@@ -60,7 +60,7 @@ KMS Key: poc-encryption-key
   • Tags: Environment=POC, Project=[GitHubRepository]
 ```
 
-### **🚨 ETAPA OBRIGATÓRIA 2 - SECURITY SERVICES:**
+### **�� ETAPA OBRIGATÓRIA 2 - SECURITY SERVICES:**
 ```yaml
 Amazon Inspector:  # 
   • Status: ENABLED
