@@ -41,7 +41,7 @@ The application is automatically deployed to AWS ECS via GitHub Actions when cod
 
 ### Health Check
 
-Application health is available at `/actuator/health`
+Application health is available at `/actuator/health/readiness`
 
 ## Environment Profiles
 
@@ -58,6 +58,59 @@ Abaixo está o diagrama de arquitetura do POC mostrando os componentes principai
 _Figura: Diagrama da arquitetura do Spring Boot Redis POC._
 
 ## infrastructure as a Prompt (IaP)
+ # IAP vs IAC: A Nova Era da Infraestrutura
+
+## O que é IAP (Infrastructure as a Prompt)?
+
+Infrastructure as a Prompt (IAP) é uma abordagem revolucionária onde a infraestrutura é provisionada e gerenciada através de comandos em linguagem natural usando IA
+generativa. Em vez de escrever código, você descreve o que precisa em texto simples.
+
+## O que é IAC (Infrastructure as Code)?
+
+Infrastructure as Code (IAC) é a prática tradicional de definir infraestrutura através de código declarativo usando ferramentas como Terraform, CloudFormation ou Pulumi.
+
+## Principais Benefícios do IAP sobre IAC
+
+### 🗣️ Linguagem Natural
+• **IAP**: "Crie um cluster Kubernetes com 3 nodes e load balancer"
+• **IAC**: Centenas de linhas de código HCL/YAML complexo
+
+### ⚡ Velocidade Extrema
+• **IAP**: Infraestrutura criada em segundos através de prompts
+• **IAC**: Horas de desenvolvimento, teste e debugging de código
+
+### 🎯 Acessibilidade Universal
+• **IAP**: Qualquer pessoa pode provisionar infraestrutura sem conhecimento técnico
+• **IAC**: Requer expertise em ferramentas específicas e sintaxe complexa
+
+### 🔄 Iteração Inteligente
+• **IAP**: "Adicione monitoramento e aumente a capacidade para 1000 usuários"
+• **IAC**: Modificação manual de múltiplos arquivos e recursos
+
+### 🧠 Contexto Inteligente
+• **IAP**: IA sugere melhores práticas e otimizações automaticamente
+• **IAC**: Conhecimento de boas práticas depende da experiência do desenvolvedor
+
+### 🛡️ Segurança por Design
+• **IAP**: Políticas de segurança aplicadas automaticamente pela IA
+• **IAC**: Configurações de segurança manuais e propensas a erros
+
+## Exemplo Prático
+
+IAP:
+"Crie uma aplicação web escalável com banco de dados,
+backup automático e SSL, otimizada para 10.000 usuários"
+
+
+IAC:
+hcl
+# 200+ linhas de código Terraform
+resource "aws_instance" "web" {
+  ami           = "ami-0c55b159cbfafe1d0"
+  instance_type = "t3.medium"
+  # ... dezenas de configurações manuais
+}
+
 
 <!-- Begin PROMPT.md content -->
 
