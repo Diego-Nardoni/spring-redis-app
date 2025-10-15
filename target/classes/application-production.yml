@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: spring-redis-poc
+  config:
+    import: "optional:aws-parameterstore:/spring-redis-app/"
+  cloud:
+    aws:
+      region:
+        static: us-east-1
+      parameterstore:
+        enabled: true
+        prefix: /spring-redis-app
+        fail-fast: false
+  data:
+    redis:
+      host: ${redis.endpoint:localhost}
+      port: ${redis.port:6379}
+      ssl:
+        enabled: ${redis.ssl:false}
+      timeout: 5s
+      connect-timeout: 3s
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 2
+          max-wait: 3s
+        shutdown-timeout: 3s
+  session:
+    store-type: redis
+    redis:
+      namespace: "spring-redis-app:session:prod"
+      flush-mode: on_save
+    timeout: 30m
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  health:
+    redis:
+      enabled: false
+
+logging:
+  level:
+    com.poc: INFO
+    org.springframework.data.redis: WARN
+    io.lettuce.core: WARN
+    root: WARN

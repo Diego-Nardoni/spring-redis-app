@@ -1,0 +1,61 @@
+spring:
+  cloud:
+    aws:
+      parameterstore:
+        enabled: true
+        prefix: /poc
+        profile-separator: _
+        fail-fast: true
+      region:
+        static: us-east-1
+        auto: false
+      stack:
+        auto: false
+  redis:
+    host: ${redis.endpoint}
+    port: ${redis.port}
+    ssl: ${redis.ssl}
+    timeout: 3000ms
+    lettuce:
+      pool:
+        max-active: 20
+        max-idle: 10
+        min-idle: 2
+        max-wait: 2000ms
+        time-between-eviction-runs: 30000ms
+        min-evictable-idle-time: 60000ms
+      shutdown-timeout: 2000ms
+  session:
+    store-type: redis
+    redis:
+      namespace: spring:session
+    timeout: 30m
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      cloudwatch:
+        enabled: true
+        namespace: SpringRedisApp
+        batch-size: 20
+        step: 1m
+    tags:
+      application: spring-redis-poc
+      environment: ${ENVIRONMENT:production}
+
+logging:
+  level:
+    com.poc: DEBUG
+    io.awspring.cloud: DEBUG
+    software.amazon.awssdk: INFO
+    io.lettuce.core: INFO
+    org.springframework.data.redis: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

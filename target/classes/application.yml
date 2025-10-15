@@ -1,0 +1,37 @@
+spring:
+  profiles:
+    active: production
+  cloud:
+    aws:
+      parameterstore:
+        enabled: true
+        prefix: /spring-redis-app
+        profile-separator: _
+        fail-fast: true
+      region:
+        static: us-east-1
+        auto: false
+      stack:
+        auto: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      cloudwatch:
+        enabled: true
+        namespace: SpringRedisApp
+        batch-size: 20
+        step: 1m
+
+logging:
+  level:
+    com.poc: DEBUG
+    io.awspring.cloud: DEBUG
+    software.amazon.awssdk: INFO
