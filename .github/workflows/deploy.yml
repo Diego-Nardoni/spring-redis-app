@@ -17,9 +17,9 @@ jobs:
       AWS_REGION: us-east-1
       AWS_ACCOUNT_ID: 221082174220
       ECR_REPOSITORY: spring-redis-app
-      ECS_CLUSTER: poc-cluster
-      ECS_SERVICE: poc-spring-redis-service
-      TASK_FAMILY: poc-spring-redis-task
+      ECS_CLUSTER: spring-redis-app-cluster
+      ECS_SERVICE: spring-redis-app-service
+      TASK_FAMILY: spring-redis-app-task
       IMAGE_TAG: ${{ github.sha }}
 
     steps:
@@ -71,7 +71,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: ecs-task-def.json
-          container-name: spring-redis-app
+          container-name: spring-redis-app-app
           image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
 
       - name: Deploy to Amazon ECS
