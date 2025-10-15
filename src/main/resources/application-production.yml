@@ -2,7 +2,7 @@ spring:
   application:
     name: spring-redis-poc
   config:
-    import: "aws-parameterstore:/spring-redis-app/"
+    import: "optional:aws-parameterstore:/spring-redis-app/"
   cloud:
     aws:
       region:

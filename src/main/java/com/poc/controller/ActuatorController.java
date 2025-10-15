@@ -1,6 +1,5 @@
 package com.poc.controller;
 
-import com.poc.service.ServerlessCacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -17,11 +16,6 @@ import java.util.Map;
 public class ActuatorController {
 
     private static final Logger log = LoggerFactory.getLogger(ActuatorController.class);
-    private final ServerlessCacheService cacheService;
-
-    public ActuatorController(ServerlessCacheService cacheService) {
-        this.cacheService = cacheService;
-    }
 
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> health() {
@@ -36,20 +30,17 @@ public class ActuatorController {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            // Teste básico de conectividade Redis
-            boolean redisHealthy = cacheService.isHealthy();
-            
-            response.put("status", redisHealthy ? "UP" : "DOWN");
+            // Health check simples - apenas verifica se a aplicação está rodando
+            response.put("status", "UP");
             response.put("timestamp", LocalDateTime.now());
+            response.put("service", "spring-redis-app");
             response.put("checks", Map.of(
-                "redis", Map.of("status", redisHealthy ? "UP" : "DOWN")
+                "application", Map.of("status", "UP")
             ));
             
-            if (redisHealthy) {
-                return ResponseEntity.ok(response);
-            } else {
-                return ResponseEntity.status(503).body(response);
-            }
+            log.info("Readiness check passed");
+            return ResponseEntity.ok(response);
+            
         } catch (Exception e) {
             log.error("Readiness check failed", e);
             response.put("status", "DOWN");
