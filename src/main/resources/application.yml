@@ -1,11 +1,11 @@
 spring:
   profiles:
-    active: serverless
+    active: production
   cloud:
     aws:
       parameterstore:
         enabled: true
-        prefix: /poc
+        prefix: /spring-redis-app
         profile-separator: _
         fail-fast: true
       region:

@@ -2,14 +2,14 @@ spring:
   application:
     name: spring-redis-poc
   config:
-    import: "aws-parameterstore:/poc/"
+    import: "aws-parameterstore:/spring-redis-app/"
   cloud:
     aws:
       region:
         static: us-east-1
       parameterstore:
         enabled: true
-        prefix: /poc
+        prefix: /spring-redis-app
         fail-fast: false
   data:
     redis:
@@ -29,7 +29,7 @@ spring:
   session:
     store-type: redis
     redis:
-      namespace: "poc:session:prod"
+      namespace: "spring-redis-app:session:prod"
       flush-mode: on_save
     timeout: 30m
 
