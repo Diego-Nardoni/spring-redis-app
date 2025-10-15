@@ -12,6 +12,7 @@
     {
       "name": "spring-redis-app-app",
       "image": "221082174220.dkr.ecr.us-east-1.amazonaws.com/spring-redis-app:latest",
+      "cpu": 0,
       "essential": true,
       "portMappings": [
         {
@@ -22,20 +23,26 @@
       ],
       "environment": [
         {
-          "name": "AWS_XRAY_TRACING_NAME",
-          "value": "spring-redis-app"
-        },
-        {
-          "name": "AWS_XRAY_DAEMON_ADDRESS",
-          "value": "xray-daemon:2000"
-        },
-        {
           "name": "SPRING_PROFILES_ACTIVE",
           "value": "production"
         },
         {
           "name": "_X_AMZN_TRACE_ID",
           "value": ""
+        },
+        {
+          "name": "AWS_XRAY_TRACING_NAME",
+          "value": "spring-redis-app"
+        },
+        {
+          "name": "AWS_XRAY_DAEMON_ADDRESS",
+          "value": "xray-daemon:2000"
+        }
+      ],
+      "dependsOn": [
+        {
+          "containerName": "xray-daemon",
+          "condition": "START"
         }
       ],
       "logConfiguration": {
@@ -56,12 +63,9 @@
         "retries": 2,
         "startPeriod": 60
       },
-      "dependsOn": [
-        {
-          "containerName": "xray-daemon",
-          "condition": "START"
-        }
-      ]
+      "mountPoints": [],
+      "volumesFrom": [],
+      "systemControls": []
     },
     {
       "name": "xray-daemon",
@@ -89,7 +93,12 @@
           "awslogs-region": "us-east-1",
           "awslogs-stream-prefix": "xray"
         }
-      }
+      },
+      "mountPoints": [],
+      "volumesFrom": [],
+      "systemControls": []
     }
-  ]
+  ],
+  "volumes": [],
+  "placementConstraints": []
 }
