@@ -1,18 +1,16 @@
 {
-  "family": "spring-redis-app-task",
+  "family": "poc-spring-redis-task",
+  "taskRoleArn": "arn:aws:iam::221082174220:role/ecsTaskRole",
+  "executionRoleArn": "arn:aws:iam::221082174220:role/ecsTaskExecutionRole",
   "networkMode": "awsvpc",
-  "requiresCompatibilities": [
-    "FARGATE"
-  ],
+  "requiresCompatibilities": ["FARGATE"],
   "cpu": "512",
   "memory": "1024",
-  "executionRoleArn": "arn:aws:iam::221082174220:role/ecsTaskExecutionRole",
-  "taskRoleArn": "arn:aws:iam::221082174220:role/spring-redis-app-ecsTaskRole",
   "containerDefinitions": [
     {
-      "name": "spring-redis-app-app",
+      "name": "spring-redis-app",
       "image": "221082174220.dkr.ecr.us-east-1.amazonaws.com/spring-redis-app:latest",
-      "essential": true,
+      "cpu": 0,
       "portMappings": [
         {
           "containerPort": 8080,
@@ -20,14 +18,11 @@
           "protocol": "tcp"
         }
       ],
+      "essential": true,
       "environment": [
         {
-          "name": "AWS_XRAY_TRACING_NAME",
-          "value": "spring-redis-app"
-        },
-        {
-          "name": "AWS_XRAY_DAEMON_ADDRESS",
-          "value": "xray-daemon:2000"
+          "name": "AWS_REGION",
+          "value": "us-east-1"
         },
         {
           "name": "SPRING_PROFILES_ACTIVE",
@@ -36,12 +31,20 @@
         {
           "name": "_X_AMZN_TRACE_ID",
           "value": ""
+        },
+        {
+          "name": "AWS_XRAY_TRACING_NAME",
+          "value": "poc-spring-redis-app"
+        },
+        {
+          "name": "AWS_XRAY_DAEMON_ADDRESS",
+          "value": "xray-daemon:2000"
         }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/ecs/spring-redis-app-task",
+          "awslogs-group": "/ecs/poc-spring-redis-task",
           "awslogs-region": "us-east-1",
           "awslogs-stream-prefix": "ecs"
         }
@@ -68,14 +71,13 @@
       "image": "public.ecr.aws/xray/aws-xray-daemon:latest",
       "cpu": 32,
       "memoryReservation": 256,
-      "essential": true,
       "portMappings": [
         {
           "containerPort": 2000,
-          "hostPort": 2000,
           "protocol": "udp"
         }
       ],
+      "essential": true,
       "environment": [
         {
           "name": "AWS_REGION",
@@ -85,7 +87,7 @@
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/ecs/spring-redis-app-task",
+          "awslogs-group": "/ecs/poc-spring-redis-task",
           "awslogs-region": "us-east-1",
           "awslogs-stream-prefix": "xray"
         }
