@@ -4,20 +4,49 @@ Use o MCP Server (Cloud Control API) para provisionar AUTOMATICAMENTE a arquitet
 MOSTRE o PLANO antes de aplicar, peça confirmação, e só então EXECUTE.
 Garanta idempotência (ajustar sem recriar recursos à toa).
 
-## 🔧 IMPLEMENTAÇÃO
-- **MÉTODO OBRIGATÓRIO:** Use exclusivamente MCP Server tools
-- **PROIBIDO:** Scripts .sh, AWS CLI direto
-- **FLUXO:** generate_infrastructure_code() → explain() → create_resource()
+## 🔧 IMPLEMENTAÇÃO - FLUXO OBRIGATÓRIO
+- **MÉTODO EXCLUSIVO:** Use APENAS MCP Server tools (Cloud Control API)
+- **PROIBIDO ABSOLUTO:** Scripts .sh, AWS CLI direto para criação, CloudFormation templates
+- **FLUXO OBRIGATÓRIO:** Para cada recurso execute:
+  1. `generate_infrastructure_code()` → gera o código
+  2. `explain()` → mostra o que será criado (OBRIGATÓRIO mostrar ao usuário)
+  3. `create_resource()` → cria o recurso
+  4. Comando AWS CLI → verifica se foi criado
+  5. Marca ✅ no checklist → prossegue para próximo
 
-**REQUISITOS OBRIGATÓRIOS:**
+**⚠️ CRÍTICO: Aguarde confirmação do usuário após explain() antes de executar create_resource()**
 
-1. **CHECKLIST EXPLÍCITO**: Antes de começar, crie um checklist numerado de TODOS os serviços/recursos que você vai criar. Marque cada item como ✅ CRIADO ou ❌ PENDENTE conforme avança.
+**REQUISITOS OBRIGATÓRIOS - EXECUÇÃO GARANTIDA:**
 
-2. **VERIFICAÇÃO APÓS CADA CRIAÇÃO**: Após criar cada recurso, execute imediatamente um comando AWS CLI para confirmar que existe (ex: aws ec2 describe-vpcs, aws ecs list-clusters, etc.) e mostre o resultado.
+1. **CHECKLIST EXPLÍCITO OBRIGATÓRIO**: Antes de começar, crie um checklist numerado de TODOS os 47 recursos que você vai criar. Use este formato:
+   ```
+   📋 CHECKLIST DE RECURSOS (47 TOTAL):
+   ❌ 1. KMS Key (poc-encryption-key)
+   ❌ 2. VPC ([GitHubRepository]-vpc)
+   ❌ 3. Internet Gateway ([GitHubRepository]-igw)
+   ... (continue para todos os 47 recursos)
+   ```
 
-3. **VALIDAÇÃO FINAL**: Ao terminar, execute comandos de listagem para confirmar que TODOS os recursos do checklist foram criados com sucesso.
+2. **VERIFICAÇÃO OBRIGATÓRIA APÓS CADA CRIAÇÃO**: Após criar cada recurso, PARE e execute:
+   - Comando AWS CLI específico para verificar o recurso
+   - Marque ✅ CRIADO no checklist
+   - Mostre o resultado da verificação
+   - SÓ ENTÃO prossiga para o próximo
 
-**NÃO prossiga para o próximo item do checklist sem antes verificar que o anterior foi criado com sucesso.**
+3. **VALIDAÇÃO FINAL OBRIGATÓRIA**: Ao terminar, execute comandos para confirmar que TODOS os 47 recursos existem:
+   ```bash
+   # Exemplo de comandos finais obrigatórios
+   aws kms list-keys --query 'Keys[?KeyId==`[DYNAMIC_KMS_KEY_ID]`]'
+   aws ec2 describe-vpcs --filters "Name=tag:Name,Values=[GitHubRepository]-vpc"
+   aws ecs list-clusters --query 'clusterArns[?contains(@,`[GitHubRepository]-cluster`)]'
+   aws elasticache describe-serverless-caches --serverless-cache-name [GitHubRepository]-serverless-cache
+   aws cloudfront list-distributions --query 'DistributionList.Items[?Comment==`[GitHubRepository] CloudFront Distribution with WAF`]'
+   ```
+
+4. **ORDEM DE EXECUÇÃO CRÍTICA**: Siga EXATAMENTE esta ordem para evitar falhas de dependência:
+   - KMS → VPC/Networking → Security Groups → ECR → Parameter Store → ECS → ALB → CloudFront+WAF → Redis → Observabilidade
+
+**❌ REGRA CRÍTICA: NÃO prossiga para o próximo item sem verificar que o anterior foi criado com sucesso.**
 
 ## **📋 PARÂMETROS DE ENTRADA**
 ```yaml
@@ -60,7 +89,7 @@ KMS Key: poc-encryption-key
   • Tags: Environment=POC, Project=[GitHubRepository]
 ```
 
-### **�� ETAPA OBRIGATÓRIA 2 - SECURITY SERVICES:**
+### **🚨 ETAPA OBRIGATÓRIA 2 - SECURITY SERVICES:**
 ```yaml
 Amazon Inspector:  # 
   • Status: ENABLED
@@ -200,18 +229,27 @@ ETAPA 6 - Associar Subnets aos Route Tables:
   • Descrição: "Redis Security Group"
 ```
 
-### **🚨 VALIDAÇÕES CRÍTICAS PRÉ-ECS:**
+### **🚨 VALIDAÇÕES CRÍTICAS PRÉ-ECS - OBRIGATÓRIAS:**
 ```yaml
-Antes de criar ECS Service, EXECUTAR:
-  1. aws ec2 describe-route-tables --filters "Name=vpc-id,Values=[VPC_ID]"
-  2. aws ec2 describe-vpc-endpoints --filters "Name=vpc-id,Values=[VPC_ID]"
-  3. Verificar se S3 Gateway está em AMBOS os route tables
-  4. Verificar se subnets privadas estão no route table privado
-  5. Verificar se todos VPC Endpoints estão "available"
-  6. Testar conectividade: aws ecr describe-repositories (via VPC Endpoint)
-  7. Verificar Inspector ECR: aws inspector2 batch-get-account-status   
-  8. Verificar GuardDuty runtime: aws guardduty get-detector --detector-id [DETECTOR_ID]  
-  9. Verificar KMS key: aws kms describe-key --key-id [DYNAMIC_KMS_KEY_ID]   
+Antes de criar ECS Service, EXECUTAR OBRIGATORIAMENTE:
+  1. aws ec2 describe-route-tables --filters "Name=vpc-id,Values=[VPC_ID]" --query 'RouteTables[*].{RouteTableId:RouteTableId,Routes:Routes[*].{Destination:DestinationCidrBlock,Gateway:GatewayId,VpcEndpoint:VpcEndpointId}}'
+  2. aws ec2 describe-vpc-endpoints --filters "Name=vpc-id,Values=[VPC_ID]" --query 'VpcEndpoints[*].{ServiceName:ServiceName,State:State,VpcEndpointId:VpcEndpointId}'
+  3. aws ec2 describe-subnets --filters "Name=vpc-id,Values=[VPC_ID]" --query 'Subnets[*].{SubnetId:SubnetId,AvailabilityZone:AvailabilityZone,CidrBlock:CidrBlock,Tags:Tags[?Key==`Name`].Value|[0]}'
+  4. aws kms describe-key --key-id [DYNAMIC_KMS_KEY_ID] --query 'KeyMetadata.{KeyId:KeyId,KeyRotationStatus:KeyRotationStatus,KeyState:KeyState}'
+  5. aws inspector2 batch-get-account-status --query 'accounts[0].resourceState.ecr.status'
+  6. aws guardduty list-detectors --query 'DetectorIds[0]' | xargs -I {} aws guardduty get-detector --detector-id {} --query 'Features[?Name==`RUNTIME_MONITORING`].Status'
+  7. aws ecr describe-repositories --repository-names [GitHubRepository] --query 'repositories[0].{repositoryUri:repositoryUri,imageScanningConfiguration:imageScanningConfiguration}'
+
+CRITÉRIOS DE APROVAÇÃO:
+  ✅ S3 Gateway Endpoint deve aparecer em AMBOS route tables (público e privado)
+  ✅ Subnets privadas devem estar associadas ao route table privado (SEM rota 0.0.0.0/0)
+  ✅ Todos VPC Endpoints devem estar "available"
+  ✅ KMS key deve estar "Enabled" com KeyRotationStatus "true"
+  ✅ Inspector ECR deve estar "ENABLED"
+  ✅ GuardDuty Runtime Monitoring deve estar "ENABLED"
+  ✅ ECR repository deve existir com imageScanningConfiguration.scanOnPush=true
+
+❌ SE QUALQUER VALIDAÇÃO FALHAR, CORRIJA ANTES DE PROSSEGUIR PARA ECS
 ```
 ## **📦 4) ECR COM SECURITY SCANNING AVANÇADO**
 ```yaml
@@ -685,7 +723,76 @@ Observabilidade e Manutenção:
   auto_minor_version_upgrade: true
 ```
 
-## **🚨 ETAPAS DE VERIFICAÇÃO E VALIDAÇÃO**
+## **🔍 VERIFICAÇÕES FINAIS OBRIGATÓRIAS - TODOS OS 47 RECURSOS**
+
+### **COMANDOS DE VALIDAÇÃO FINAL (EXECUTAR TODOS):**
+```bash
+# 1. SEGURANÇA (7 recursos)
+aws kms describe-key --key-id [DYNAMIC_KMS_KEY_ID] --query 'KeyMetadata.KeyState'
+aws inspector2 batch-get-account-status --query 'accounts[0].resourceState.ecr.status'
+aws guardduty list-detectors --query 'DetectorIds[0]'
+aws securityhub describe-hub --query 'HubArn'
+aws macie2 get-macie-session --query 'status'
+aws accessanalyzer list-analyzers --query 'analyzers[0].status'
+aws ec2 get-ebs-encryption-by-default --query 'EbsEncryptionByDefault'
+
+# 2. NETWORKING (15 recursos)
+aws ec2 describe-vpcs --filters "Name=tag:Name,Values=[GitHubRepository]-vpc" --query 'Vpcs[0].VpcId'
+aws ec2 describe-subnets --filters "Name=vpc-id,Values=[VPC_ID]" --query 'length(Subnets[])'
+aws ec2 describe-internet-gateways --filters "Name=tag:Name,Values=[GitHubRepository]-igw" --query 'InternetGateways[0].InternetGatewayId'
+aws ec2 describe-route-tables --filters "Name=vpc-id,Values=[VPC_ID]" --query 'length(RouteTables[])'
+aws ec2 describe-vpc-endpoints --filters "Name=vpc-id,Values=[VPC_ID]" --query 'length(VpcEndpoints[])'
+aws ec2 describe-security-groups --filters "Name=vpc-id,Values=[VPC_ID]" --query 'length(SecurityGroups[])'
+
+# 3. CONTAINERS (8 recursos)
+aws ecr describe-repositories --repository-names [GitHubRepository] --query 'repositories[0].repositoryName'
+aws ecs list-clusters --query 'clusterArns[?contains(@,`[GitHubRepository]-cluster`)]'
+aws ecs describe-task-definition --task-definition [GitHubRepository]-task --query 'taskDefinition.family'
+aws ecs describe-services --cluster [GitHubRepository]-cluster --services [GitHubRepository]-service --query 'services[0].serviceName'
+aws application-autoscaling describe-scalable-targets --service-namespace ecs --query 'length(ScalableTargets[])'
+aws application-autoscaling describe-scaling-policies --service-namespace ecs --query 'length(ScalingPolicies[])'
+aws logs describe-log-groups --log-group-name-prefix "/ecs/[GitHubRepository]" --query 'length(logGroups[])'
+aws iam get-role --role-name ecsTaskRole --query 'Role.RoleName'
+
+# 4. LOAD BALANCER (3 recursos)
+aws elbv2 describe-load-balancers --names [GitHubRepository]-alb --query 'LoadBalancers[0].LoadBalancerName'
+aws elbv2 describe-target-groups --names [GitHubRepository]-tg --query 'TargetGroups[0].TargetGroupName'
+aws elbv2 describe-listeners --load-balancer-arn [ALB_ARN] --query 'length(Listeners[])'
+
+# 5. CDN + WAF (2 recursos)
+aws cloudfront list-distributions --query 'DistributionList.Items[?Comment==`[GitHubRepository] CloudFront Distribution with WAF`].Id'
+aws wafv2 list-web-acls --scope CLOUDFRONT --query 'WebACLs[?Name==`[GitHubRepository]-cloudfront-web-acl`].Id'
+
+# 6. REDIS (1 recurso)
+aws elasticache describe-serverless-caches --serverless-cache-name [GitHubRepository]-serverless-cache --query 'ServerlessCaches[0].ServerlessCacheName'
+
+# 7. PARAMETER STORE (3 recursos)
+aws ssm get-parameter --name "/[GitHubRepository]/redis/endpoint" --query 'Parameter.Name'
+aws ssm get-parameter --name "/[GitHubRepository]/redis/port" --query 'Parameter.Name'
+aws ssm get-parameter --name "/[GitHubRepository]/redis/ssl" --query 'Parameter.Name'
+
+# 8. OBSERVABILIDADE (8 recursos)
+aws logs describe-log-groups --query 'length(logGroups[?starts_with(logGroupName,`/aws/`) || starts_with(logGroupName,`/ecs/`)])'
+aws cloudwatch list-dashboards --query 'length(DashboardEntries[?starts_with(DashboardName,`[GitHubRepository]`)])'
+aws cloudwatch describe-alarms --query 'length(MetricAlarms[?starts_with(AlarmName,`[GitHubRepository]`)])'
+aws sns list-topics --query 'length(Topics[?contains(TopicArn,`[GitHubRepository]`)])'
+aws xray get-service-graph --start-time $(date -d '1 hour ago' -u +%Y-%m-%dT%H:%M:%SZ) --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) --query 'length(Services[])'
+
+# TOTAL ESPERADO: 47 RECURSOS
+echo "✅ VALIDAÇÃO COMPLETA: Todos os 47 recursos devem estar presentes"
+```
+
+### **CRITÉRIOS DE SUCESSO:**
+- **Segurança**: 7 recursos (KMS, Inspector, GuardDuty, Security Hub, Macie, Access Analyzer, EBS Encryption)
+- **Networking**: 15 recursos (VPC, 6 subnets, IGW, 2 route tables, 4 VPC endpoints, 4 security groups)
+- **Containers**: 8 recursos (ECR, ECS cluster, task def, service, 2 auto scaling, log group, IAM role)
+- **Load Balancer**: 3 recursos (ALB, target group, listener)
+- **CDN + WAF**: 2 recursos (CloudFront distribution, WAF Web ACL)
+- **Redis**: 1 recurso (ElastiCache Serverless)
+- **Parameter Store**: 3 recursos (3 parameters encrypted)
+- **Observabilidade**: 8 recursos (log groups, dashboards, alarms, SNS topics, X-Ray)
+
+**🎯 TOTAL: 47 RECURSOS CONFIRMADOS**
 
 ### **Circuit Breaker Verification:**
 ```bash
