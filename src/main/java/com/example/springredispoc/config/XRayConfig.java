@@ -4,10 +4,7 @@ import com.amazonaws.xray.AWSXRay;
 import com.amazonaws.xray.AWSXRayRecorderBuilder;
 import com.amazonaws.xray.plugins.EC2Plugin;
 import com.amazonaws.xray.plugins.ECSPlugin;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import jakarta.servlet.Filter;
 
 @Configuration
 public class XRayConfig {
@@ -21,8 +18,6 @@ public class XRayConfig {
         AWSXRay.setGlobalRecorder(builder.build());
     }
 
-    @Bean
-    public Filter TracingFilter() {
-        return new com.amazonaws.xray.jakarta.servlet.AWSXRayServletFilter("SpringRedisApp");
-    }
+    // No Filter needed - X-Ray SDK will work automatically with Spring Boot 3+
+    // Tracing will be handled by the SDK directly via environment variables
 }
