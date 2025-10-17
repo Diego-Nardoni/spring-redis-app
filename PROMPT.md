@@ -295,11 +295,55 @@ Parameters:  # Todos encrypted com KMS
     • Description: "Redis SSL enabled for [GitHubRepository]"
     • KmsKeyId: arn:aws:kms:[AWS_REGION]:[AWS_ACCOUNT_ID]:key/[DYNAMIC_KMS_KEY_ID]
 
-IAM Policy para ECS Tasks:  # KMS decrypt permission
-  • Effect: Allow
-  • Action: ssm:GetParameter, ssm:GetParameters, ssm:GetParametersByPath
-  • Resource: arn:aws:ssm:[AWS_REGION]:[AWS_ACCOUNT_ID]:parameter/[GitHubRepository]/*
-  • KMS Decrypt: arn:aws:kms:[AWS_REGION]:[AWS_ACCOUNT_ID]:key/[DYNAMIC_KMS_KEY_ID]
+## **📋 ORDEM DE CRIAÇÃO OBRIGATÓRIA - CRÍTICA PARA SUCESSO**
+
+### **SEQUÊNCIA EXATA (NÃO ALTERAR):**
+1. ✅ KMS Key (primeiro - usado por todos os outros)
+2. ✅ Parameter Store (com KMS encryption)
+3. ✅ **IAM Roles** (com permissões Parameter Store + KMS)
+4. ✅ VPC + Networking (subnets, security groups, etc.)
+5. ✅ ECR Repository
+6. ✅ ECS Cluster + CloudWatch Log Group
+7. ✅ ECS Task Definition (usando roles específicos)
+8. ✅ ECS Service + Auto Scaling
+9. ✅ ALB + Target Group + Listener
+10. ✅ Redis Serverless
+11. ✅ WAF + CloudFront
+12. ✅ Observabilidade (SNS, Alarms, Dashboard)
+
+### **⚠️ DEPENDÊNCIAS CRÍTICAS:**
+- **IAM Roles** devem existir ANTES da Task Definition
+- **Parameter Store** deve ter valores reais ANTES do ECS Service
+- **Security Groups** devem estar configurados ANTES do Redis/ECS
+- **VPC Endpoints** devem existir ANTES do ECS (para ECR/CloudWatch)
+
+## **🔐 IAM ROLES PARA ECS - CRIAR OBRIGATORIAMENTE ANTES DO ECS**
+
+ECS Task Execution Role: [GitHubRepository]-ecsTaskExecutionRole
+  • Trust Policy:
+    - Service: ecs-tasks.amazonaws.com
+    - Action: sts:AssumeRole
+  • Managed Policies:
+    - AmazonECSTaskExecutionRolePolicy  # ECR, CloudWatch Logs
+  • Custom Policy: [GitHubRepository]-ParameterStoreExecutionPolicy
+    - Effect: Allow
+    - Action: ssm:GetParameter, ssm:GetParameters, ssm:GetParametersByPath, kms:Decrypt
+    - Resource: 
+      - arn:aws:ssm:[AWS_REGION]:[AWS_ACCOUNT_ID]:parameter/[GitHubRepository]/*
+      - arn:aws:kms:[AWS_REGION]:[AWS_ACCOUNT_ID]:key/[DYNAMIC_KMS_KEY_ID]
+
+ECS Task Role: [GitHubRepository]-ecsTaskRole  
+  • Trust Policy:
+    - Service: ecs-tasks.amazonaws.com
+    - Action: sts:AssumeRole
+  • Managed Policies:
+    - AWSXRayDaemonWriteAccess  # X-Ray tracing
+  • Custom Policy: [GitHubRepository]-ParameterStoreTaskPolicy
+    - Effect: Allow
+    - Action: ssm:GetParameter, ssm:GetParameters, ssm:GetParametersByPath, kms:Decrypt
+    - Resource: 
+      - arn:aws:ssm:[AWS_REGION]:[AWS_ACCOUNT_ID]:parameter/[GitHubRepository]/*
+      - arn:aws:kms:[AWS_REGION]:[AWS_ACCOUNT_ID]:key/[DYNAMIC_KMS_KEY_ID]
 ```
 
 ## **⚙️ 6) ECS FARGATE COM ZERO DOWNTIME, AUTO SCALING E X-RAY**
@@ -316,6 +360,15 @@ Task Definition: [GitHubRepository]-task
   • Network Mode: awsvpc
   • Requires Compatibilities: FARGATE
 
+Task Definition: [GitHubRepository]-task
+  • Family: [GitHubRepository]-task
+  • Network Mode: awsvpc
+  • Requires Compatibilities: FARGATE
+  • CPU: 512
+  • Memory: 1024
+  • Execution Role ARN: arn:aws:iam::[AWS_ACCOUNT_ID]:role/[GitHubRepository]-ecsTaskExecutionRole  # ✅ ESPECÍFICO
+  • Task Role ARN: arn:aws:iam::[AWS_ACCOUNT_ID]:role/[GitHubRepository]-ecsTaskRole  # ✅ ESPECÍFICO
+
 Container Definitions:  #  X-Ray Tracing
   [GitHubRepository]-app:
     • Name: [GitHubRepository]-app
@@ -326,6 +379,10 @@ Container Definitions:  #  X-Ray Tracing
       • _X_AMZN_TRACE_ID: ""
       • AWS_XRAY_TRACING_NAME: "[GitHubRepository]"
       • AWS_XRAY_DAEMON_ADDRESS: "xray-daemon:2000"
+    • Secrets (Parameter Store):  # ✅ USAR SECRETS EM VEZ DE ENVIRONMENT
+      • SPRING_DATA_REDIS_HOST: /[GitHubRepository]/redis/endpoint
+      • SPRING_DATA_REDIS_PORT: /[GitHubRepository]/redis/port  
+      • SPRING_DATA_REDIS_SSL_ENABLED: /[GitHubRepository]/redis/ssl
     • Log Configuration:  # Encrypted logs
       • Driver: awslogs
       • Group: /ecs/[GitHubRepository]-task
@@ -358,15 +415,11 @@ Container Definitions:  #  X-Ray Tracing
       • Group: /ecs/[GitHubRepository]-task
       • Region: [AWS_REGION]
       • Stream Prefix: xray
-
-Task Role: ecsTaskRole  # X-Ray permissions added
-  • Managed Policies:
-    • AWSXRayDaemonWriteAccess  # X-Ray tracing permissions
-  • Inline Policy:
-    • Effect: Allow
-    • Action: ssm:GetParameter, ssm:GetParameters, ssm:GetParametersByPath
-    • Resource: arn:aws:ssm:[AWS_REGION]:[AWS_ACCOUNT_ID]:parameter/[GitHubRepository]/*
-    • KMS Decrypt: arn:aws:kms:[AWS_REGION]:[AWS_ACCOUNT_ID]:key/[DYNAMIC_KMS_KEY_ID]
+    • Log Configuration:
+      • Driver: awslogs
+      • Group: /ecs/[GitHubRepository]-task
+      • Region: [AWS_REGION]
+      • Stream Prefix: xray
 
 Service: [GitHubRepository]-service 
   • Cluster: [GitHubRepository]-cluster
@@ -426,8 +479,8 @@ Auto Scaling Configuration:  #  Multi-métrica
     • Memory High/Low alarms
 
 Roles:
-  • Task Role: ecsTaskRole (existente com Parameter Store access + KMS decrypt + X-Ray)
-  • Execution Role: ecsTaskExecutionRole (AWS managed + KMS decrypt)
+  • Task Role: [GitHubRepository]-ecsTaskRole (específico com Parameter Store + KMS + X-Ray)
+  • Execution Role: [GitHubRepository]-ecsTaskExecutionRole (específico com Parameter Store + KMS + ECR)
 ```
 ## **🔄 7) APPLICATION LOAD BALANCER COM ZERO DOWNTIME**
 ```yaml
@@ -752,7 +805,8 @@ aws ecs describe-services --cluster [GitHubRepository]-cluster --services [GitHu
 aws application-autoscaling describe-scalable-targets --service-namespace ecs --query 'length(ScalableTargets[])'
 aws application-autoscaling describe-scaling-policies --service-namespace ecs --query 'length(ScalingPolicies[])'
 aws logs describe-log-groups --log-group-name-prefix "/ecs/[GitHubRepository]" --query 'length(logGroups[])'
-aws iam get-role --role-name ecsTaskRole --query 'Role.RoleName'
+aws iam get-role --role-name [GitHubRepository]-ecsTaskRole --query 'Role.RoleName'
+aws iam get-role --role-name [GitHubRepository]-ecsTaskExecutionRole --query 'Role.RoleName'
 
 # 4. LOAD BALANCER (3 recursos)
 aws elbv2 describe-load-balancers --names [GitHubRepository]-alb --query 'LoadBalancers[0].LoadBalancerName'

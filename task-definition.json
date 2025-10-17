@@ -39,6 +39,20 @@
           "value": "xray-daemon:2000"
         }
       ],
+      "secrets": [
+        {
+          "name": "SPRING_DATA_REDIS_HOST",
+          "valueFrom": "/spring-redis-app/redis/endpoint"
+        },
+        {
+          "name": "SPRING_DATA_REDIS_PORT",
+          "valueFrom": "/spring-redis-app/redis/port"
+        },
+        {
+          "name": "SPRING_DATA_REDIS_SSL_ENABLED",
+          "valueFrom": "/spring-redis-app/redis/ssl"
+        }
+      ],
       "dependsOn": [
         {
           "containerName": "xray-daemon",
