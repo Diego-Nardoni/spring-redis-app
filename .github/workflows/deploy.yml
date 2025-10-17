@@ -62,7 +62,9 @@ jobs:
                 essential: containerDefinitions[0].essential,
                 portMappings: containerDefinitions[0].portMappings,
                 environment: containerDefinitions[0].environment,
-                logConfiguration: containerDefinitions[0].logConfiguration
+                secrets: containerDefinitions[0].secrets,
+                logConfiguration: containerDefinitions[0].logConfiguration,
+                healthCheck: containerDefinitions[0].healthCheck
               }]
             }' > ecs-task-def.json
 

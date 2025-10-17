@@ -32,6 +32,12 @@ spring:
       namespace: "spring-redis-app:session:prod"
       flush-mode: on_save
     timeout: 30m
+    cookie:
+      name: JSESSIONID
+      http-only: true
+      secure: false
+      same-site: lax
+      max-age: 1800
 
 server:
   port: 8080
@@ -48,11 +54,12 @@ management:
         enabled: true
   health:
     redis:
-      enabled: false
+      enabled: true
 
 logging:
   level:
-    com.poc: INFO
-    org.springframework.data.redis: WARN
-    io.lettuce.core: WARN
-    root: WARN
+    com.poc: DEBUG
+    org.springframework.session: DEBUG
+    org.springframework.data.redis: DEBUG
+    io.lettuce.core: INFO
+    root: INFO

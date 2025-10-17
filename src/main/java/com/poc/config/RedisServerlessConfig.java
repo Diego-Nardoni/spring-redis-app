@@ -12,6 +12,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
+import org.springframework.session.web.http.CookieHttpSessionIdResolver;
+import org.springframework.session.web.http.DefaultCookieSerializer;
+import org.springframework.session.web.http.HttpSessionIdResolver;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
@@ -23,17 +27,18 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import java.time.Duration;
 
 @Configuration
+@EnableRedisHttpSession(maxInactiveIntervalInSeconds = 1800, redisNamespace = "spring:session")
 public class RedisServerlessConfig {
 
     private static final Logger log = LoggerFactory.getLogger(RedisServerlessConfig.class);
 
-    @Value("${spring.data.redis.host:localhost}")
+    @Value("${redis.endpoint:localhost}")
     private String redisHost;
 
-    @Value("${spring.data.redis.port:6379}")
+    @Value("${redis.port:6379}")
     private int redisPort;
 
-    @Value("${spring.data.redis.ssl.enabled:true}")
+    @Value("${redis.ssl:false}")
     private boolean useSsl;
 
     @Bean
@@ -95,17 +100,30 @@ public class RedisServerlessConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         
-        StringRedisSerializer stringSerializer = new StringRedisSerializer();
-        GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer();
-        
-        template.setKeySerializer(stringSerializer);
-        template.setValueSerializer(jsonSerializer);
-        template.setHashKeySerializer(stringSerializer);
-        template.setHashValueSerializer(jsonSerializer);
+        // Configuração crítica para Spring Session funcionar
+        template.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
         
         template.setEnableTransactionSupport(false);
         template.afterPropertiesSet();
         
         return template;
+    }
+
+    @Bean
+    public HttpSessionIdResolver httpSessionIdResolver() {
+        CookieHttpSessionIdResolver resolver = new CookieHttpSessionIdResolver();
+        DefaultCookieSerializer cookieSerializer = new DefaultCookieSerializer();
+        cookieSerializer.setCookieName("JSESSIONID");
+        cookieSerializer.setCookiePath("/");
+        // Remove domain restriction to work with CloudFront
+        cookieSerializer.setUseHttpOnlyCookie(true);
+        cookieSerializer.setUseSecureCookie(false); // CloudFront handles HTTPS
+        cookieSerializer.setSameSite("Lax");
+        resolver.setCookieSerializer(cookieSerializer);
+        return resolver;
     }
 }

@@ -32,11 +32,11 @@
         },
         {
           "name": "AWS_XRAY_TRACING_NAME",
-          "value": "spring-redis-app"
+          "value": "SpringRedisApp"
         },
         {
-          "name": "AWS_XRAY_DAEMON_ADDRESS",
-          "value": "xray-daemon:2000"
+          "name": "AWS_XRAY_CONTEXT_MISSING",
+          "value": "LOG_ERROR"
         }
       ],
       "secrets": [
@@ -51,12 +51,6 @@
         {
           "name": "SPRING_DATA_REDIS_SSL_ENABLED",
           "valueFrom": "/spring-redis-app/redis/ssl"
-        }
-      ],
-      "dependsOn": [
-        {
-          "containerName": "xray-daemon",
-          "condition": "START"
         }
       ],
       "logConfiguration": {
@@ -76,37 +70,6 @@
         "timeout": 5,
         "retries": 2,
         "startPeriod": 60
-      },
-      "mountPoints": [],
-      "volumesFrom": [],
-      "systemControls": []
-    },
-    {
-      "name": "xray-daemon",
-      "image": "public.ecr.aws/xray/aws-xray-daemon:latest",
-      "cpu": 32,
-      "memoryReservation": 256,
-      "essential": true,
-      "portMappings": [
-        {
-          "containerPort": 2000,
-          "hostPort": 2000,
-          "protocol": "udp"
-        }
-      ],
-      "environment": [
-        {
-          "name": "AWS_REGION",
-          "value": "us-east-1"
-        }
-      ],
-      "logConfiguration": {
-        "logDriver": "awslogs",
-        "options": {
-          "awslogs-group": "/ecs/spring-redis-app-task",
-          "awslogs-region": "us-east-1",
-          "awslogs-stream-prefix": "xray"
-        }
       },
       "mountPoints": [],
       "volumesFrom": [],

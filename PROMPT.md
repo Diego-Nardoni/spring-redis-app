@@ -70,7 +70,11 @@ IAM Role: GitHubActionsECRDeployRole
   • Managed Policies:
     • AmazonEC2ContainerRegistryPowerUser
     • AmazonSSMReadOnlyAccess
-  • Inline Policy: ECS update-service mínima + SSM GetParameter + KMS decrypt
+  • Inline Policy: ECS update-service mínima + SSM GetParameter + KMS decrypt + X-Ray
+    • ecs:UpdateService, ecs:DescribeServices, ecs:DescribeTaskDefinition
+    • ssm:GetParameter, ssm:GetParameters, ssm:GetParametersByPath
+    • kms:Decrypt (para Parameter Store)
+    • xray:PutTraceSegments, xray:PutTelemetryRecords (para X-Ray SDK)
 ```
 ## **🛡️ 2) SEGURANÇA ENTERPRISE - IMPLEMENTADO**
 
@@ -193,6 +197,12 @@ ETAPA 5 - VPC Endpoints (SEM NAT Gateway):
 
   SSM Interface Endpoint:  # ✅ CRÍTICO para Parameter Store
     • Service: com.amazonaws.[AWS_REGION].ssm
+    • Subnets: [[GitHubRepository]-private-subnet-1a, [GitHubRepository]-private-subnet-1b, [GitHubRepository]-private-subnet-1c]
+    • Security Groups: [GitHubRepository]-sg-endpoints
+    • Private DNS: ENABLED
+
+  X-Ray Interface Endpoint:  # ✅ CRÍTICO para X-Ray SDK-only
+    • Service: com.amazonaws.[AWS_REGION].xray
     • Subnets: [[GitHubRepository]-private-subnet-1a, [GitHubRepository]-private-subnet-1b, [GitHubRepository]-private-subnet-1c]
     • Security Groups: [GitHubRepository]-sg-endpoints
     • Private DNS: ENABLED
@@ -374,11 +384,10 @@ Container Definitions:  #  X-Ray Tracing
     • Name: [GitHubRepository]-app
     • Image: [AWS_ACCOUNT_ID].dkr.ecr.[AWS_REGION].amazonaws.com/[GitHubRepository]:latest
     • Port: 8080
-    • Environment Variables:  # ✅ X-RAY VARIABLES ADDED
+    • Environment Variables:  # ✅ X-RAY SDK-ONLY VARIABLES
       • SPRING_PROFILES_ACTIVE: "production"
-      • _X_AMZN_TRACE_ID: ""
-      • AWS_XRAY_TRACING_NAME: "[GitHubRepository]"
-      • AWS_XRAY_DAEMON_ADDRESS: "xray-daemon:2000"
+      • AWS_XRAY_TRACING_NAME: "SpringRedisApp"
+      • AWS_XRAY_CONTEXT_MISSING: "LOG_ERROR"
     • Secrets (Parameter Store):  # ✅ USAR SECRETS EM VEZ DE ENVIRONMENT
       • SPRING_DATA_REDIS_HOST: /[GitHubRepository]/redis/endpoint
       • SPRING_DATA_REDIS_PORT: /[GitHubRepository]/redis/port  
@@ -395,31 +404,8 @@ Container Definitions:  #  X-Ray Tracing
       • Timeout: 5
       • Retries: 2
       • Start Period: 60
-    • Depends On:  # ✅ X-RAY DEPENDENCY
-      • Container Name: xray-daemon
-      • Condition: START
 
-  xray-daemon:  # X-Ray Sidecar
-    • Name: xray-daemon
-    • Image: public.ecr.aws/xray/aws-xray-daemon:latest  # ✅ ECR público para VPC compatibility
-    • CPU: 32
-    • Memory Reservation: 256
-    • Port Mappings:
-      • Container Port: 2000
-      • Protocol: udp
-    • Essential: true
-    • Environment:
-      • AWS_REGION: [AWS_REGION]
-    • Log Configuration:
-      • Driver: awslogs
-      • Group: /ecs/[GitHubRepository]-task
-      • Region: [AWS_REGION]
-      • Stream Prefix: xray
-    • Log Configuration:
-      • Driver: awslogs
-      • Group: /ecs/[GitHubRepository]-task
-      • Region: [AWS_REGION]
-      • Stream Prefix: xray
+  # ✅ REMOVIDO: X-Ray daemon container (usando SDK-only)
 
 Service: [GitHubRepository]-service 
   • Cluster: [GitHubRepository]-cluster
@@ -682,16 +668,15 @@ SNS Topics:  # ✅ IMPLEMENTADO: Email notifications
   • [GitHubRepository]-alerts-info: arn:aws:sns:[AWS_REGION]:[AWS_ACCOUNT_ID]:[GitHubRepository]-alerts-info
   • Email Subscriptions: [SEU_EMAIL] (requires confirmation)
 
-X-Ray Tracing:  # ✅ IMPLEMENTADO: Performance monitoring
+X-Ray Tracing:  # ✅ IMPLEMENTADO: Performance monitoring SDK-only
   • Service Map: [GitHubRepository]
-  • Daemon: Sidecar container (public.ecr.aws/xray/aws-xray-daemon:latest)  # ✅ ECR público para VPC compatibility
+  • SDK Integration: Direct HTTPS to X-Ray service (no daemon required)
   • Sampling Rule: 10% de todas as requests
   • Trace retention: 30 days
   • Encryption: KMS (poc-encryption-key)  
   • Environment Variables:
-    • AWS_XRAY_TRACING_NAME: [GitHubRepository]
-    • AWS_XRAY_DAEMON_ADDRESS: xray-daemon:2000
-    • _X_AMZN_TRACE_ID: ""
+    • AWS_XRAY_TRACING_NAME: SpringRedisApp
+    • AWS_XRAY_CONTEXT_MISSING: LOG_ERROR
   • IAM Permissions: AWSXRayDaemonWriteAccess  
 ```
 ## **🛡️ 11) SEGURANÇA ENTERPRISE COMPLETA - STATUS IMPLEMENTADO**
@@ -924,7 +909,7 @@ Todas as resources:
 
 ## **✅ RESULTADO FINAL GARANTIDO:**
 - Auto scaling com 3 métricas (CPU 75%, ALB 1000 req/target, Memory 80%)
-- X-Ray tracing completo com sidecar container
+- X-Ray tracing completo com SDK-only (sem daemon)
 - Health checks otimizados (15s interval, 5s timeout)
 - Circuit breaker com rollback automático
 - Container Insights habilitado
