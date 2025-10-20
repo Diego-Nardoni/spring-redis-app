@@ -50,11 +50,11 @@ Garanta idempotência (ajustar sem recriar recursos à toa).
 
 ## **📋 PARÂMETROS DE ENTRADA**
 ```yaml
-AWS_ACCOUNT_ID: 221082174220 
-AWS_REGION: us-east-1
-GitHubOrganization: Diego-Nardoni
-GitHubRepository: spring-redis-app
-SEU_NOME: Diego-Nardoni
+AWS_ACCOUNT_ID: #ID DA SUA CONTA 
+AWS_REGION: #REGIÃO
+GitHubOrganization: #ORG GITHUB
+GitHubRepository: #REPO GUTHUB
+SEU_NOME: #SEU NOME
 Aplicação: Spring Boot já existente no GitHub
 ```
 
