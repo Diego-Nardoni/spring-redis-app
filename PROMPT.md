@@ -18,13 +18,13 @@ Garanta idempotência (ajustar sem recriar recursos à toa).
 
 **REQUISITOS OBRIGATÓRIOS - EXECUÇÃO GARANTIDA:**
 
-1. **CHECKLIST EXPLÍCITO OBRIGATÓRIO**: Antes de começar, crie um checklist numerado de TODOS os 47 recursos que você vai criar. Use este formato:
+1. **CHECKLIST EXPLÍCITO OBRIGATÓRIO**: Antes de começar, crie um checklist numerado de TODOS os 60 recursos que você vai criar. Use este formato:
    ```
-   📋 CHECKLIST DE RECURSOS (47 TOTAL):
+   📋 CHECKLIST DE RECURSOS (60 TOTAL):
    ❌ 1. KMS Key (poc-encryption-key)
    ❌ 2. VPC ([GitHubRepository]-vpc)
    ❌ 3. Internet Gateway ([GitHubRepository]-igw)
-   ... (continue para todos os 47 recursos)
+   ... (continue para todos os 60 recursos)
    ```
 
 2. **VERIFICAÇÃO OBRIGATÓRIA APÓS CADA CRIAÇÃO**: Após criar cada recurso, PARE e execute:
@@ -33,7 +33,7 @@ Garanta idempotência (ajustar sem recriar recursos à toa).
    - Mostre o resultado da verificação
    - SÓ ENTÃO prossiga para o próximo
 
-3. **VALIDAÇÃO FINAL OBRIGATÓRIA**: Ao terminar, execute comandos para confirmar que TODOS os 47 recursos existem:
+3. **VALIDAÇÃO FINAL OBRIGATÓRIA**: Ao terminar, execute comandos para confirmar que TODOS os 60 recursos existem:
    ```bash
    # Exemplo de comandos finais obrigatórios
    aws kms list-keys --query 'Keys[?KeyId==`[DYNAMIC_KMS_KEY_ID]`]'
@@ -44,17 +44,17 @@ Garanta idempotência (ajustar sem recriar recursos à toa).
    ```
 
 4. **ORDEM DE EXECUÇÃO CRÍTICA**: Siga EXATAMENTE esta ordem para evitar falhas de dependência:
-   - KMS → VPC/Networking → Security Groups → ECR → Parameter Store → ECS → ALB → CloudFront+WAF → Redis → Observabilidade
+   - KMS → VPC/Networking → Security Groups → ECR → Parameter Store → ECS → ALB → CloudFront+WAF → Redis → **VPC Flow Logs** → Observabilidade
 
 **❌ REGRA CRÍTICA: NÃO prossiga para o próximo item sem verificar que o anterior foi criado com sucesso.**
 
 ## **📋 PARÂMETROS DE ENTRADA**
 ```yaml
-AWS_ACCOUNT_ID: #ID DA SUA CONTA 
-AWS_REGION: #REGIÃO
-GitHubOrganization: #ORG GITHUB
-GitHubRepository: #REPO GUTHUB
-SEU_NOME: #SEU NOME
+AWS_ACCOUNT_ID: 221082174220 
+AWS_REGION: us-east-1
+GitHubOrganization: Diego-Nardoni
+GitHubRepository: spring-redis-app
+SEU_NOME: Diego-Nardoni
 Aplicação: Spring Boot já existente no GitHub
 ```
 
@@ -354,6 +354,15 @@ ECS Task Role: [GitHubRepository]-ecsTaskRole
     - Resource: 
       - arn:aws:ssm:[AWS_REGION]:[AWS_ACCOUNT_ID]:parameter/[GitHubRepository]/*
       - arn:aws:kms:[AWS_REGION]:[AWS_ACCOUNT_ID]:key/[DYNAMIC_KMS_KEY_ID]
+
+Application Auto Scaling Service Role: AWSServiceRoleForApplicationAutoScaling_ECSService
+  • Trust Policy:
+    - Service: ecs.application-autoscaling.amazonaws.com
+    - Action: sts:AssumeRole
+  • Managed Policies:
+    - ApplicationAutoScalingForAmazonECSService  # ECS Auto Scaling permissions
+  • Description: "Service-linked role for Application Auto Scaling to manage ECS services"
+  • Note: This is a service-linked role created automatically by AWS
 ```
 
 ## **⚙️ 6) ECS FARGATE COM ZERO DOWNTIME, AUTO SCALING E X-RAY**
@@ -502,12 +511,12 @@ Target Group: [GitHubRepository]-tg  # ✅ ZERO DOWNTIME - OTIMIZADO
 
 Listener: HTTP:80
   • Rules:
-    1. Priority 100: Header "X-Origin-Verify" = "[GitHubRepository]-secret-header-2025" → Forward to [GitHubRepository]-tg
+    1. Priority 100: Header "X-Origin-Verify" = "[GitHubRepository]-secret-header-{TIMESTAMP}" → Forward to [GitHubRepository]-tg
     2. Priority 200: Path "*" → Fixed Response 403 "Access Denied - Direct access not allowed"
     3. Default: Forward to [GitHubRepository]-tg
 ```
 
-## **🌐 8) CLOUDFRONT + WAF GLOBAL**
+## **🌐 8) CLOUDFRONT + WAF GLOBAL COM DEFENSE IN DEPTH**
 ```yaml
 WAF Web ACL: [GitHubRepository]-cloudfront-web-acl
   • Scope: CLOUDFRONT
@@ -528,12 +537,12 @@ CloudFront Distribution:
   • Web ACL: [GitHubRepository]-cloudfront-web-acl
   • Logging: ENABLED  # Access logs
 
-Origin:
+Origin Configuration (Defense in Depth):
   • ID: [GitHubRepository]-alb-origin
   • Domain: !GetAtt [GitHubRepository]ALB.DNSName
   • Protocol Policy: http-only
   • Custom Headers:
-    • X-Origin-Verify: [GitHubRepository]-secret-header-2025
+    • X-Origin-Verify: [GitHubRepository]-secret-header-{TIMESTAMP}  # ✅ DINÂMICO
 
 Cache Behaviors:
   1. /api/session/redis/test: TTL 0s, forward all headers/cookies (NO CACHE)
@@ -542,6 +551,52 @@ Cache Behaviors:
   4. Default: TTL 300s, compress, HTTPS redirect
 
 Viewer Certificate: CloudFront Default
+
+## **🛡️ SEGURANÇA CLOUDFRONT + ALB (DEFENSE IN DEPTH) - IMPLEMENTAÇÃO OBRIGATÓRIA:**
+
+### **ALB Security Group Configuration:**
+  [GitHubRepository]-sg-alb-cloudfront-only:
+    • Ingress Rules:
+      - TCP 80 from CloudFront Prefix List (pl-3b927c52) ONLY
+      - TCP 443 from CloudFront Prefix List (pl-3b927c52) ONLY
+    • Egress: ALL TRAFFIC 0.0.0.0/0
+    • Description: "ALB Security Group - CloudFront Only Access"
+    • ✅ BLOQUEIA acesso direto ao ALB
+
+### **ALB Listener Rules (Header Validation):**
+  HTTP:80 Listener Rules:
+    • Priority 1: 
+      - Condition: Header "X-Origin-Verify" = "[GitHubRepository]-secret-header-{TIMESTAMP}"
+      - Action: Forward to [GitHubRepository]-tg
+    • Default Rule:
+      - Condition: All other requests
+      - Action: Fixed Response 403 "Access Denied - Invalid Origin Header"
+    • ✅ VALIDA header no ALB (não na aplicação)
+
+### **CloudFront Custom Headers (Defense in Depth):**
+Origin Configuration:
+  • ID: [GitHubRepository]-alb-origin
+  • Domain: !GetAtt [GitHubRepository]ALB.DNSName
+  • Protocol Policy: http-only
+  • Custom Headers:
+    • X-Origin-Verify: [GitHubRepository]-secret-header-{TIMESTAMP}  # ✅ DINÂMICO
+
+### **Variáveis Dinâmicas (Não Hardcoded):**
+  • Header Value: Gerar automaticamente baseado em:
+    - Formato: "[GitHubRepository]-secret-header-{TIMESTAMP}"
+    - TIMESTAMP: $(date +%Y%m%d%H%M%S)
+    - Exemplo: "spring-redis-app-secret-header-20251021180000"
+  • Aplicar em:
+    - CloudFront Custom Headers
+    - ALB Listener Rules
+    - Manter sincronizado automaticamente
+
+### **Resultado de Segurança:**
+  • ✅ Acesso via CloudFront: Funcional (header correto)
+  • ❌ Acesso direto ao ALB: Bloqueado (Security Group)
+  • ❌ Bypass com header incorreto: Bloqueado (ALB Rules)
+  • ✅ Defense in Depth: Múltiplas camadas de proteção
+  • ✅ Auditoria: Logs detalhados de tentativas de acesso
 ```
 
 ## **🔴 9) REDIS SERVERLESS COM ENCRYPTION**
@@ -572,7 +627,140 @@ Parameter Store Integration:  # ✅ CRÍTICO
   • Security Group deve permitir HTTPS (443) para VPC Endpoints
 ```
 
-## **📊 10) OBSERVABILIDADE E MONITORING AVANÇADO COM X-RAY**
+## **🔍 10) VPC FLOW LOGS E MONITORAMENTO DE SEGURANÇA - IMPLEMENTAÇÃO OBRIGATÓRIA**
+```yaml
+# ✅ SEGUINDO AWS WELL-ARCHITECTED FRAMEWORK SECURITY PILLAR
+
+### **ETAPA 1 - CloudWatch Log Groups (Encrypted com KMS):**
+/aws/vpc/flowlogs/[GitHubRepository]-vpc:
+  • Retention: 90 dias (compliance)
+  • KMS Encryption: arn:aws:kms:[AWS_REGION]:[AWS_ACCOUNT_ID]:key/[DYNAMIC_KMS_KEY_ID]
+  • Purpose: Comprehensive VPC traffic analysis
+
+/aws/vpc/flowlogs/private-subnets:
+  • Retention: 30 dias
+  • KMS Encryption: arn:aws:kms:[AWS_REGION]:[AWS_ACCOUNT_ID]:key/[DYNAMIC_KMS_KEY_ID]
+  • Purpose: Security monitoring (REJECT traffic only)
+
+/aws/vpc/flowlogs/public-subnets:
+  • Retention: 30 dias
+  • KMS Encryption: arn:aws:kms:[AWS_REGION]:[AWS_ACCOUNT_ID]:key/[DYNAMIC_KMS_KEY_ID]
+  • Purpose: ALB traffic analysis (ALL traffic)
+
+### **ETAPA 2 - IAM Role para VPC Flow Logs:**
+Role Name: [GitHubRepository]-flowlogs-role
+Trust Policy:
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Principal": {
+          "Service": "vpc-flow-logs.amazonaws.com"
+        },
+        "Action": "sts:AssumeRole"
+      }
+    ]
+  }
+
+Permissions Policy:
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream", 
+          "logs:PutLogEvents",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams"
+        ],
+        "Resource": [
+          "arn:aws:logs:[AWS_REGION]:[AWS_ACCOUNT_ID]:log-group:/aws/vpc/flowlogs/*"
+        ]
+      }
+    ]
+  }
+
+### **ETAPA 3 - VPC Flow Logs Configuration:**
+VPC-Level Flow Logs (Comprehensive):
+  • Resource: [GitHubRepository]-vpc
+  • Traffic Type: ALL
+  • Destination: CloudWatch Logs (/aws/vpc/flowlogs/[GitHubRepository]-vpc)
+  • Log Format: ${srcaddr} ${dstaddr} ${srcport} ${dstport} ${protocol} ${packets} ${bytes} ${start} ${end} ${action} ${log-status}
+  • Delivery Role: arn:aws:iam::[AWS_ACCOUNT_ID]:role/[GitHubRepository]-flowlogs-role
+  • Tags: Name=[GitHubRepository]-vpc-flowlogs, Project=[GitHubRepository], Environment=POC
+
+Private Subnets Flow Logs (Security Focus):
+  • Resources: [GitHubRepository]-private-subnet-1a, [GitHubRepository]-private-subnet-1b, [GitHubRepository]-private-subnet-1c
+  • Traffic Type: REJECT (security monitoring)
+  • Destination: CloudWatch Logs (/aws/vpc/flowlogs/private-subnets)
+  • Purpose: Detect lateral movement and unauthorized access attempts
+  • Tags: Name=[GitHubRepository]-private-subnets-flowlogs, Purpose=Security-Monitoring
+
+Public Subnets Flow Logs (ALB Traffic):
+  • Resources: [GitHubRepository]-public-subnet-1a, [GitHubRepository]-public-subnet-1b, [GitHubRepository]-public-subnet-1c
+  • Traffic Type: ALL
+  • Destination: CloudWatch Logs (/aws/vpc/flowlogs/public-subnets)
+  • Purpose: ALB traffic analysis and CloudFront validation
+  • Tags: Name=[GitHubRepository]-public-subnets-flowlogs, Purpose=ALB-Traffic-Analysis
+
+### **ETAPA 4 - CloudWatch Alarms para Segurança:**
+[GitHubRepository]-high-rejected-traffic:
+  • Metric: AWS/Logs LogEvents
+  • Dimension: LogGroupName=/aws/vpc/flowlogs/private-subnets
+  • Threshold: > 1000 rejected events em 5 minutos
+  • Comparison: GreaterThanThreshold
+  • Evaluation Periods: 1
+  • Period: 300 segundos
+  • Statistic: Sum
+  • Treat Missing Data: notBreaching
+  • Description: "Alert when rejected traffic exceeds threshold"
+
+### **ETAPA 5 - CloudWatch Insights Queries (Pré-configuradas):**
+Query 1 - Tráfego Rejeitado Suspeito:
+  fields @timestamp, srcaddr, dstaddr, dstport, action
+  | filter action = "REJECT"
+  | stats count() as rejected_count by srcaddr
+  | sort rejected_count desc
+  | limit 20
+
+Query 2 - Tentativas Redis Não Autorizadas:
+  fields @timestamp, srcaddr, dstaddr, dstport, action
+  | filter dstport = 6379 and action = "REJECT"
+  | stats count() as redis_attempts by srcaddr
+  | sort redis_attempts desc
+
+Query 3 - Análise Tráfego ALB:
+  fields @timestamp, srcaddr, dstaddr, srcport, dstport, bytes
+  | filter dstport = 80 or dstport = 443
+  | stats sum(bytes) as total_bytes by srcaddr
+  | sort total_bytes desc
+  | limit 10
+
+Query 4 - Top Portas Rejeitadas:
+  fields @timestamp, dstport, action
+  | filter action = "REJECT"
+  | stats count() as attempts by dstport
+  | sort attempts desc
+  | limit 15
+
+### **Benefícios de Segurança Implementados:**
+• ✅ Detecção de ameaças em tempo real
+• ✅ Auditoria completa de tráfego de rede
+• ✅ Compliance com frameworks de segurança
+• ✅ Troubleshooting avançado de conectividade
+• ✅ Análise forense de incidentes
+• ✅ Monitoramento de tentativas de bypass
+• ✅ Validação de políticas de segurança
+• ✅ Alertas automáticos para atividades suspeitas
+
+### **Custo Estimado:** ~$20-30/mês para arquitetura média
+### **Recursos Adicionais:** +12 recursos (3 log groups + 1 IAM role + 7 flow logs + 1 alarm)
+```
+
+## **📊 11) OBSERVABILIDADE E MONITORING AVANÇADO COM X-RAY**
 ```yaml
 CloudWatch Log Groups:  # All encrypted
   • /ecs/[GitHubRepository]-task: Retention 7 days, KMS encrypted
@@ -679,7 +867,7 @@ X-Ray Tracing:  # ✅ IMPLEMENTADO: Performance monitoring SDK-only
     • AWS_XRAY_CONTEXT_MISSING: LOG_ERROR
   • IAM Permissions: AWSXRayDaemonWriteAccess  
 ```
-## **🛡️ 11) SEGURANÇA ENTERPRISE COMPLETA - STATUS IMPLEMENTADO**
+## **🛡️ 12) SEGURANÇA ENTERPRISE COMPLETA - STATUS IMPLEMENTADO**
 ```yaml
 AWS Security Hub:  
   • Status: ENABLED
@@ -729,7 +917,7 @@ KMS Encryption:
   • X-Ray Traces: ENCRYPTED
 ```
 
-## **🧪 12) AURORA POSTGRESQL SERVERLESS v2 (POC · Baixo Custo · Criptografado)**
+## **🧪 13) AURORA POSTGRESQL SERVERLESS v2 (POC · Baixo Custo · Criptografado)**
 ```yaml
 # Banco relacional sob demanda, ideal para protótipos e workloads intermitentes.
 # ⚠️ Ajustado para custo mínimo, manter vigilância de consumo e desligar quando não estiver em uso
@@ -761,7 +949,7 @@ Observabilidade e Manutenção:
   auto_minor_version_upgrade: true
 ```
 
-## **🔍 VERIFICAÇÕES FINAIS OBRIGATÓRIAS - TODOS OS 47 RECURSOS**
+## **🔍 VERIFICAÇÕES FINAIS OBRIGATÓRIAS - TODOS OS 60 RECURSOS**
 
 ### **COMANDOS DE VALIDAÇÃO FINAL (EXECUTAR TODOS):**
 ```bash
@@ -792,6 +980,7 @@ aws application-autoscaling describe-scaling-policies --service-namespace ecs --
 aws logs describe-log-groups --log-group-name-prefix "/ecs/[GitHubRepository]" --query 'length(logGroups[])'
 aws iam get-role --role-name [GitHubRepository]-ecsTaskRole --query 'Role.RoleName'
 aws iam get-role --role-name [GitHubRepository]-ecsTaskExecutionRole --query 'Role.RoleName'
+aws iam get-role --role-name AWSServiceRoleForApplicationAutoScaling_ECSService --query 'Role.RoleName'
 
 # 4. LOAD BALANCER (3 recursos)
 aws elbv2 describe-load-balancers --names [GitHubRepository]-alb --query 'LoadBalancers[0].LoadBalancerName'
@@ -817,21 +1006,21 @@ aws cloudwatch describe-alarms --query 'length(MetricAlarms[?starts_with(AlarmNa
 aws sns list-topics --query 'length(Topics[?contains(TopicArn,`[GitHubRepository]`)])'
 aws xray get-service-graph --start-time $(date -d '1 hour ago' -u +%Y-%m-%dT%H:%M:%SZ) --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) --query 'length(Services[])'
 
-# TOTAL ESPERADO: 47 RECURSOS
-echo "✅ VALIDAÇÃO COMPLETA: Todos os 47 recursos devem estar presentes"
+# TOTAL ESPERADO: 60 RECURSOS
+echo "✅ VALIDAÇÃO COMPLETA: Todos os 60 recursos devem estar presentes"
 ```
 
 ### **CRITÉRIOS DE SUCESSO:**
 - **Segurança**: 7 recursos (KMS, Inspector, GuardDuty, Security Hub, Macie, Access Analyzer, EBS Encryption)
 - **Networking**: 15 recursos (VPC, 6 subnets, IGW, 2 route tables, 4 VPC endpoints, 4 security groups)
-- **Containers**: 8 recursos (ECR, ECS cluster, task def, service, 2 auto scaling, log group, IAM role)
+- **Containers**: 9 recursos (ECR, ECS cluster, task def, service, 2 auto scaling, log group, 2 IAM roles)
 - **Load Balancer**: 3 recursos (ALB, target group, listener)
 - **CDN + WAF**: 2 recursos (CloudFront distribution, WAF Web ACL)
 - **Redis**: 1 recurso (ElastiCache Serverless)
 - **Parameter Store**: 3 recursos (3 parameters encrypted)
 - **Observabilidade**: 8 recursos (log groups, dashboards, alarms, SNS topics, X-Ray)
 
-**🎯 TOTAL: 47 RECURSOS CONFIRMADOS**
+**🎯 TOTAL: 60 RECURSOS CONFIRMADOS**
 
 ### **Circuit Breaker Verification:**
 ```bash
@@ -883,7 +1072,7 @@ aws ecs describe-services \
 # (usuário deve commitar as alterações no repositório)
 ```
 
-## **🏷️ 13) TAGS PADRÃO**
+## **🏷️ 14) TAGS PADRÃO**
 ```yaml
 Todas as resources:
  Environment: POC
@@ -894,6 +1083,7 @@ Todas as resources:
  EncryptionEnabled: true    
  AutoScalingEnabled: true   
  XRayTracingEnabled: true   
+ FlowLogsEnabled: true      # ✅ NOVO
 ```
 
 ## **📋 PLACEHOLDERS PARA SUBSTITUIÇÃO:**
@@ -906,8 +1096,13 @@ Todas as resources:
 - `[DYNAMIC_KMS_KEY_ID]`: ID da chave KMS (gerado dinamicamente)
 - `[VPC_ID]`: ID da VPC (gerado dinamicamente)
 - `[DETECTOR_ID]`: ID do detector GuardDuty (gerado dinamicamente)
+- `{TIMESTAMP}`: Timestamp dinâmico para headers (formato: YYYYMMDDHHMM)
 
 ## **✅ RESULTADO FINAL GARANTIDO:**
+- **VPC Flow Logs** implementados seguindo AWS Well-Architected Framework
+- **Monitoramento de Segurança** com alertas automáticos
+- **Defense in Depth** com CloudFront + ALB header validation
+- **Headers Dinâmicos** sem hardcoding para reutilização
 - Auto scaling com 3 métricas (CPU 75%, ALB 1000 req/target, Memory 80%)
 - X-Ray tracing completo com SDK-only (sem daemon)
 - Health checks otimizados (15s interval, 5s timeout)
@@ -918,6 +1113,9 @@ Todas as resources:
 - Zero downtime deployment
 - Encryption end-to-end
 - Monitoring e observabilidade avançados
+- **Auditoria Completa** de tráfego de rede
+- **Detecção de Ameaças** em tempo real
+- **Compliance** com frameworks de segurança enterprise
 
 ## **📊 OBSERVABILIDADE ENTERPRISE-GRADE IMPLEMENTADA:**
 - **9 Dashboards CloudWatch** cobrindo todas as metodologias:
