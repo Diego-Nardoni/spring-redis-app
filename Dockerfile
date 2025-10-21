@@ -14,6 +14,9 @@ RUN mvn clean package -DskipTests -Dos.detected.classifier=linux-x86_64
 # Runtime stage
 FROM eclipse-temurin:17-jre-alpine
 
+# Install curl for ECS health checks
+RUN apk add --no-cache curl
+
 # Create non-root user
 RUN addgroup -g 1001 -S appgroup && \
     adduser -u 1001 -S appuser -G appgroup
@@ -29,9 +32,9 @@ RUN chown -R appuser:appgroup /app
 # Switch to non-root user
 USER appuser
 
-# Health check using our custom endpoint
+# Health check using curl for ECS compatibility
 HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health-check || exit 1
+  CMD curl -f http://localhost:8080/actuator/health/readiness || exit 1
 
 # JVM optimization for containers
 ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseG1GC -XX:+UseContainerSupport"
